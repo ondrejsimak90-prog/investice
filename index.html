@@ -1,356 +1,612 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Přehled Investic</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-gray-900 text-gray-100 font-sans">
+<style>
+  :root{
+    --bg:#12151c;
+    --panel:#1a1f29;
+    --panel-2:#1f2530;
+    --border:#2a3040;
+    --text:#e8e6de;
+    --muted:#8b93a5;
+    --gold:#c9a961;
+    --gold-dim:#8f7c4d;
+    --green:#5cb894;
+    --red:#cf5b4e;
+    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  #app{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100%;
+    padding:28px 20px 60px;
+    line-height:1.4;
+  }
+  .wrap{max-width:1040px;margin:0 auto;}
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:4px;
+  }
+  h1{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:32px;
+    margin:0 0 18px;
+    color:var(--text);
+    letter-spacing:.2px;
+  }
+  .rule{height:1px;background:linear-gradient(90deg,var(--gold-dim),transparent 70%);margin-bottom:26px;}
 
-    <header class="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold tracking-wide text-indigo-400">
-                <i class="fa-solid fa-chart-line mr-2"></i>Investment Tracker
-            </h1>
-            <div>
-                <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition cursor-pointer hidden">
-                    <i class="fa-solid fa-sign-out-alt mr-2"></i>Odhlásit
-                </button>
-            </div>
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--border);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:28px;
+  }
+  .card{background:var(--panel);padding:16px 18px;}
+  .card .label{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .card .value{font-family:var(--serif);font-size:22px;}
+  .card .value.pos{color:var(--green);}
+  .card .value.neg{color:var(--red);}
+  .card .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:4px;}
+
+  .platform-block{margin-bottom:30px;}
+  .platform-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding-bottom:8px;margin-bottom:2px;border-bottom:1px solid var(--border);
+  }
+  .platform-head h2{font-family:var(--serif);font-weight:400;font-size:19px;margin:0;color:var(--gold);}
+  .platform-head .pf-total{font-family:var(--mono);font-size:12.5px;color:var(--muted);}
+
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:right;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);font-weight:400;
+    padding:10px 8px 6px;border-bottom:1px solid var(--border);
+  }
+  thead th:first-child, thead th:nth-child(2){text-align:left;}
+  tbody td{
+    padding:9px 8px;font-family:var(--mono);font-size:13px;text-align:right;
+    border-bottom:1px solid #212736;
+  }
+  tbody td:first-child{text-align:left;font-family:var(--sans);font-size:13.5px;}
+  tbody td:nth-child(2){text-align:left;color:var(--muted);font-size:12px;}
+  tbody tr:hover{background:var(--panel-2);}
+  .sym{font-weight:600;letter-spacing:.2px;}
+  .pos{color:var(--green);}
+  .neg{color:var(--red);}
+  .editable{
+    background:transparent;border:1px solid transparent;color:var(--text);
+    font-family:var(--mono);font-size:13px;text-align:right;width:78px;border-radius:4px;padding:3px 5px;
+  }
+  .editable:hover{border-color:var(--border);}
+  .editable:focus{outline:none;border-color:var(--gold-dim);background:#0f1319;}
+  .del-btn{
+    background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;
+    padding:2px 6px;border-radius:4px;
+  }
+  .del-btn:hover{color:var(--red);background:#241a1a;}
+
+  .panel-toggle{
+    display:flex;gap:10px;margin:28px 0 16px;
+  }
+  .btn{
+    font-family:var(--sans);font-size:13px;background:var(--panel);color:var(--text);
+    border:1px solid var(--border);padding:9px 16px;border-radius:7px;cursor:pointer;
+  }
+  .btn:hover{border-color:var(--gold-dim);}
+  .btn.primary{background:var(--gold-dim);border-color:var(--gold-dim);color:#12151c;font-weight:600;}
+  .btn.primary:hover{background:var(--gold);}
+
+  .form-panel{
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:18px 20px;margin-bottom:20px;display:none;
+  }
+  .form-panel.open{display:block;}
+  .form-panel h3{font-family:var(--serif);font-weight:400;font-size:16px;margin:0 0 14px;color:var(--gold);}
+  .form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .form-row input, .form-row textarea{
+    background:#0f1319;border:1px solid var(--border);color:var(--text);
+    padding:8px 10px;border-radius:6px;font-family:var(--sans);font-size:13px;
+  }
+  .form-row input{flex:1;min-width:110px;}
+  .form-row textarea{width:100%;min-height:120px;font-family:var(--mono);font-size:11.5px;resize:vertical;}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:2px;margin-bottom:10px;}
+  .empty{color:var(--muted);font-size:13px;padding:20px 0;text-align:center;font-family:var(--sans);}
+  .toast{
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+    background:var(--panel);border:1px solid var(--gold-dim);color:var(--text);
+    padding:9px 16px;border-radius:7px;font-size:12.5px;opacity:0;transition:opacity .25s;
+    pointer-events:none;font-family:var(--sans);
+  }
+  .toast.show{opacity:1;}
+</style>
+
+<div id="app">
+  <div class="wrap">
+    <div class="eyebrow">Investiční přehled</div>
+    <h1>Portfolio</h1>
+    <div class="rule"></div>
+
+    <div class="summary" id="summary"></div>
+
+    <div class="panel-toggle">
+      <button class="btn primary" id="btn-add">+ Přidat pozici</button>
+      <button class="btn" id="btn-import">Vložit výpis</button>
+    </div>
+
+    <div class="form-panel" id="panel-add">
+      <h3>Přidat pozici ručně</h3>
+      <div class="form-row">
+        <input id="f-platform" placeholder="Platforma (např. XTB, Degiro, Trading212)">
+        <input id="f-symbol" placeholder="Symbol (např. AAPL.US)">
+        <input id="f-qty" placeholder="Množství" type="number" step="any">
+      </div>
+      <div class="form-row">
+        <input id="f-buy" placeholder="Nákupní cena (za kus)" type="number" step="any">
+        <input id="f-cur" placeholder="Aktuální cena (za kus)" type="number" step="any">
+        <input id="f-ccy" placeholder="Měna (USD, EUR, CZK...)">
+        <input id="f-fx" placeholder="Kurz na CZK (1 pokud v CZK)" type="number" step="any">
+      </div>
+      <button class="btn primary" id="f-submit">Uložit pozici</button>
+    </div>
+
+    <div class="form-panel" id="panel-import">
+      <h3>Vložit výpis z brokera</h3>
+      <div class="hint">Funguje s formátem "Otevřené pozice" (sloupce: NO, Pozice, Symbol, Trh, Objemy, Datum, Čas, Otevírací cena, Tržní cena, ...). Import <b>nahradí</b> všechny pozice pro zadanou platformu aktuálním obsahem výpisu.</div>
+      <div class="form-row">
+        <select id="i-format" style="background:#0f1319;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-family:var(--sans);font-size:13px;">
+          <option value="xtb">XTB – Otevřené pozice</option>
+          <option value="fio" selected>Fio – Vývoj pozice na CP</option>
+        </select>
+        <input id="i-platform" placeholder="Název platformy" value="Fio">
+      </div>
+      <div class="form-row">
+        <textarea id="i-text" placeholder="Sem vlož text výpisu...">31.12.2018	 	 	 	 	 	0,00	0,00	537,50	0,00	0,00	 	 	 	->
+07.04.2022	Nákup	50,00	970,00	-48 500,00	140,70	-48 640,70	50,00	970,50	48 525,00	-115,70	-0,24%	970,00	 	Nákup
+29.07.2022	Nákup	3,00	1 082,00	-3 246,00	50,00	-51 936,70	53,00	1 093,00	57 929,00	5 992,30	11,54%	976,34	 	Nákup
+29.07.2022	Nákup	15,00	1 076,00	-16 140,00	66,49	-68 143,19	68,00	1 093,00	74 324,00	6 180,81	9,07%	998,32	 	Nákup
+01.11.2022	 	0,00	 	2 040,00	0,00	-66 103,19	68,00	811,00	55 148,00	-10 955,19	-16,08%	998,32	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+06.01.2023	Nákup	10,00	790,00	-7 900,00	40,00	-74 043,19	78,00	791,00	61 698,00	-12 345,19	-16,23%	971,62	 	Nákup
+01.08.2023	 	0,00	 	9 613,50	0,00	-64 429,69	78,00	965,00	75 270,00	10 840,31	14,25%	971,62	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+01.08.2024	 	0,00	 	3 447,60	0,00	-60 982,09	78,00	910,50	71 019,00	10 036,91	13,19%	971,62	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+26.08.2024	Nákup	15,00	884,00	-13 260,00	56,41	-74 298,50	93,00	885,00	82 305,00	8 006,50	8,96%	957,48	 	Nákup
+03.09.2024	Nákup	5,00	864,00	-4 320,00	40,00	-78 658,50	98,00	860,00	84 280,00	5 621,50	6,00%	952,71	 	Nákup
+01.08.2025	 	0,00	 	3 916,00	0,00	-74 742,50	98,00	1 241,00	121 618,00	46 875,50	50,00%	952,71	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+27.03.2026	CZK	 	 	 	393,60	-74 742,50	98,00	1 184,00	116 032,00	41 289,50	44,04%	952,71	 	<-   
+export Vývoj pozice na CP - KOMERČNÍ BANKA (BAAKOMB) - (1.1.2019 - 27.3.2026)
+Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozice CP	Close	Ocenění pozice (Close)	Zisk	Zisk v %	Prům. nákupní kurz	Prům. prodejní kurz	Text
+13.04.2022	Nákup	50,00	839,00	-41 950,00	146,80	-42 096,80	50,00	831,50	41 575,00	-521,80	-1,24%	839,00	 	Nákup
+06.05.2022	Nákup	10,00	765,00	-7 650,00	40,00	-49 786,80	60,00	750,00	45 000,00	-4 786,80	-9,61%	826,67	 	Nákup
+23.05.2022	 	0,00	 	1 861,50	0,00	-47 925,30	60,00	740,50	44 430,00	-3 495,30	-7,02%	826,67	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+29.07.2022	Nákup	8,00	609,50	-4 876,00	50,00	-52 851,30	68,00	608,00	41 344,00	-11 507,30	-21,03%	801,12	 	Nákup
+22.12.2022	 	0,00	 	3 207,90	0,00	-49 643,40	68,00	660,50	44 914,00	-4 729,40	-8,64%	801,12	 	BAAKOMB - Dividenda KOMERČNÍ BANKA (po zdanění, daň 15%)
+14.03.2023	Nákup	20,00	713,00	-14 260,00	59,91	-63 963,31	88,00	708,00	62 304,00	-1 659,31	-2,40%	781,09	 	Nákup
+11.05.2023	Nákup	18,00	687,00	-12 366,00	53,28	-76 382,59	106,00	685,00	72 610,00	-3 772,59	-4,63%	765,11	 	Nákup
+22.05.2023	 	0,00	 	4 519,42	0,00	-71 863,17	106,00	656,50	69 589,00	-2 274,17	-2,79%	765,11	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+28.05.2024	 	0,00	 	7 447,67	0,00	-64 415,50	106,00	777,00	82 362,00	17 946,50	22,03%	765,11	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+06.08.2024	Nákup	15,00	764,00	-11 460,00	50,11	-75 925,61	121,00	757,00	91 597,00	15 671,39	16,86%	764,98	 	Nákup
+26.05.2025	 	0,00	 	9 390,30	0,00	-66 535,31	121,00	1 027,00	124 267,00	57 731,69	62,10%	764,98	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+27.03.2026	CZK	 	 	 	400,10	-66 535,31	121,00	1 069,00	129 349,00	62 813,69	67,57%	764,98	 	<-</textarea>
+      </div>
+      <div class="hint">Formát „Fio" čeká sloupce oddělené tabulátorem (Datum, Směr, Množství, Cena, Objem, Poplatek, ..., Celková pozice CP, Close, Ocenění pozice, Zisk, Zisk %, Prům. nákupní kurz...). Pro každý cenný papír se použije poslední řádek (aktuální stav).</div>
+      <button class="btn primary" id="i-submit">Zpracovat výpis</button>
+    </div>
+
+    <div id="holdings"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  const SEED_TEXT = `1 1385996742 MSFT.US XOFF 0.4705 16.07.2024 15:30:03 454.3600 410.5400 193.15907 -9.64% Cash Stocks 24.1940000000 0.00 0.00 0.00 -416.02
+2 1385997469 AAPL.US XOFF 0.0933 16.07.2024 15:30:03 235.1800 241.4600 22.528218 2.67% Cash Stocks 24.1940000000 0.00 0.00 0.00 21.54
+3 1385997528 TSLA.US XOFF 0.0137 16.07.2024 15:30:03 255.4400 355.8000 4.87446 39.29% Cash Stocks 24.1940000000 0.00 0.00 0.00 33.91
+4 1385998261 GOOGL.US XOFF 0.2905 16.07.2024 15:30:03 187.4200 186.0900 54.059145 -0.71% Cash Stocks 24.1940000000 0.00 0.00 0.00 9.71
+5 1386003241 AAPL.US XOFF 1.0000 16.07.2024 15:30:54 235.1000 241.4600 241.46 2.71% Cash Stocks 24.1940000000 0.00 0.00 0.00 233.26
+6 1386004370 GOOGL.US XOFF 2.0000 16.07.2024 15:31:06 187.4600 186.0900 372.18 -0.73% Cash Stocks 24.1940000000 0.00 0.00 0.00 65.70
+7 1386004968 TSLA.US XOFF 1.0000 16.07.2024 15:31:12 256.1200 355.8000 355.8 38.92% Cash Stocks 24.1940000000 0.00 0.00 0.00 2459.63
+8 1392730666 JPM.US XOFF 0.0171 22.07.2024 17:25:18 210.6500 276.2000 4.72302 31.12% Cash Stocks 24.1940000000 0.00 0.00 0.00 28.23
+9 1392730779 JPM.US XOFF 1.0000 22.07.2024 17:25:19 210.6300 276.2000 276.2 31.13% Cash Stocks 24.1940000000 0.00 0.00 0.00 1651.46
+10 1392740510 GRMN.US XOFF 0.2418 22.07.2024 17:29:55 172.5600 209.6500 50.69337 21.49% Cash Stocks 24.1940000000 0.00 0.00 0.00 231.72
+11 1392740627 GRMN.US XOFF 1.0000 22.07.2024 17:29:57 172.5000 209.6500 209.65 21.54% Cash Stocks 24.1940000000 0.00 0.00 0.00 959.70
+12 1392744102 MMM.US XOFF 0.0610 22.07.2024 17:31:33 103.9500 148.6100 9.06521 42.96% Cash Stocks 24.1940000000 0.00 0.00 0.00 67.54
+13 1392744117 MMM.US XOFF 2.0000 22.07.2024 17:31:34 103.9600 148.6100 297.22 42.95% Cash Stocks 24.1940000000 0.00 0.00 0.00 2214.26
+14 1397485326 JNJ.US XOFF 0.3305 25.07.2024 18:35:14 159.8900 157.2000 51.9546 -1.68% Cash Stocks 24.1940000000 0.00 0.00 0.00 -6.77
+15 1397485336 JNJ.US XOFF 1.0000 25.07.2024 18:35:15 159.8700 157.2000 157.2 -1.67% Cash Stocks 24.1940000000 0.00 0.00 0.00 -19.99
+16 1412201169 AAPL.US XOFF 0.4105 06.08.2024 15:30:03 209.1300 241.4600 99.11933 15.46% Cash Stocks 24.1940000000 0.00 0.00 0.00 358.64
+17 1412540339 GOOGL.US XOFF 0.5402 06.08.2024 16:58:35 159.2600 186.0900 100.525818 16.85% Cash Stocks 24.1940000000 0.00 0.00 0.00 390.28
+18 1414193057 QQQ.US XTB 2.0000 07.08.2024 16:13:13 448.8100 535.1000 1070.2 19.23% Equities CFD 23.9120000000 0.00 -1043.06 0.00 4126.73
+19 1414198031 MSFT.US XOFF 0.2097 07.08.2024 16:15:26 410.0500 410.5400 86.090238 0.12% Cash Stocks 24.1940000000 0.00 0.00 0.00 46.98
+20 1414198481 TSLA.US XOFF 0.4316 07.08.2024 16:15:38 199.2100 355.8000 153.56328 78.61% Cash Stocks 24.1940000000 0.00 0.00 0.00 1651.42
+21 1484244985 VWCE.DE XETA 0.6859 07.10.2024 09:11:50 127.2200 138.7400 95.161766 9.06% Cash Stocks 24.9910000000 0.00 0.00 0.00 146.77
+22 1484244993 VWCE.DE XETA 10.0000 07.10.2024 09:11:51 127.2200 138.7400 1387.4 9.06% Cash Stocks 24.9910000000 0.00 0.00 0.00 2139.85
+23 1485038289 AGAS.NO MESI 4.0000 07.10.2024 16:00:50 117.8000 81.3000 325.2 -30.98% Cash Stocks 2.1402300000 0.00 0.00 0.00 -343.70
+24 1491114050 VWCE.DE XOFF 0.3042 11.10.2024 09:04:01 127.7200 138.7400 42.204708 8.63% Cash Stocks 24.9910000000 0.00 0.00 0.00 61.84
+25 1512242669 TTWO.US KNEM 0.3171 29.10.2024 14:30:03 160.6300 209.8500 66.543435 30.64% Cash Stocks 24.1940000000 0.00 0.00 0.00 376.44
+26 1512247453 TTWO.US KNEM 1.0000 29.10.2024 14:30:35 160.3900 209.8500 209.85 30.84% Cash Stocks 24.1940000000 0.00 0.00 0.00 1193.12
+27 1528486344 GOOGL.US XOFF 0.1785 08.11.2024 19:03:41 178.8600 186.0900 33.217065 4.04% Cash Stocks 24.1940000000 0.00 0.00 0.00 32.51
+28 1528486367 GOOGL.US XOFF 1.0000 08.11.2024 19:03:42 178.8600 186.0900 186.09 4.04% Cash Stocks 24.1940000000 0.00 0.00 0.00 182.10
+29 1529484060 VWCE.DE XOFF 0.2954 11.11.2024 09:04:26 131.9400 138.7400 40.983796 5.15% Cash Stocks 24.9910000000 0.00 0.00 0.00 30.91
+30 1530111658 SAP.DE HREU 2.0000 11.11.2024 14:48:32 223.5000 280.6500 561.3 25.57% Cash Stocks 24.9910000000 0.00 0.00 0.00 2604.28
+31 1547942350 BRYN.DE XOFF 0.0375 22.11.2024 14:23:24 453.7500 455.4500 17.079375 0.37% Cash Stocks 24.9910000000 0.00 0.00 0.00 -8.14
+32 1547942383 BRYN.DE XOFF 1.0000 22.11.2024 14:23:25 453.7000 455.4500 455.45 0.39% Cash Stocks 24.9910000000 0.00 0.00 0.00 -215.92
+33 1548088115 LLY.US XOFF 0.1362 22.11.2024 15:30:03 750.0100 871.8100 118.740522 16.24% Cash Stocks 24.1940000000 0.00 0.00 0.00 322.91
+34 1558393813 BRYN.DE XOFF 0.0285 02.12.2024 09:03:32 460.5000 455.4500 12.980325 -1.10% Cash Stocks 24.9910000000 0.00 0.00 0.00 -9.87
+35 1558438020 BRYN.DE XOFF 1.0000 02.12.2024 09:05:32 460.1500 455.4500 455.45 -1.02% Cash Stocks 24.9910000000 0.00 0.00 0.00 -338.90
+36 1569847167 ASO.US KNEM 0.2659 10.12.2024 15:30:03 50.5000 53.5000 14.22565 5.94% Cash Stocks 24.1940000000 0.00 0.00 0.00 16.51
+37 1569851340 ASO.US KNEM 8.0000 10.12.2024 15:30:24 50.5000 53.5000 428 5.94% Cash Stocks 24.1940000000 0.00 0.00 0.00 495.89
+38 1570920931 VWCE.DE XOFF 0.2884 11.12.2024 09:04:05 135.9800 138.7400 40.012616 2.03% Cash Stocks 24.9910000000 0.00 0.00 0.00 7.00
+39 1576726466 BRYN.DE EUCC 0.0433 16.12.2024 15:54:54 438.0000 455.4500 19.720985 3.98% Cash Stocks 24.9910000000 0.00 0.00 0.00 14.16
+40 1576726511 BRYN.DE EUCC 1.0000 16.12.2024 15:54:55 438.2000 455.4500 455.45 3.94% Cash Stocks 24.9910000000 0.00 0.00 0.00 322.00
+41 1578267558 TTWO.US KNEM 0.1088 17.12.2024 15:30:04 187.7200 209.8500 22.83168 11.79% Cash Stocks 24.1940000000 0.00 0.00 0.00 52.86
+42 1578267592 TTWO.US KNEM 0.1087 17.12.2024 15:30:04 187.7200 209.8500 22.810695 11.79% Cash Stocks 24.1940000000 0.00 0.00 0.00 52.81
+43 1578270377 TTWO.US KNEM 1.0000 17.12.2024 15:30:20 186.6400 209.8500 209.85 12.44% Cash Stocks 24.1940000000 0.00 0.00 0.00 511.15
+44 1578270512 TTWO.US KNEM 1.0000 17.12.2024 15:30:21 186.6400 209.8500 209.85 12.44% Cash Stocks 24.1940000000 0.00 0.00 0.00 511.15
+45 1581938602 TTWO.US KNEM 0.1320 19.12.2024 15:30:03 183.8800 209.8500 27.7002 14.12% Cash Stocks 24.1940000000 0.00 0.00 0.00 68.57
+46 1581940163 TSLA.US KNEM 0.0261 19.12.2024 15:30:03 452.7600 355.8000 9.28638 -21.42% Cash Stocks 24.1940000000 0.00 0.00 0.00 -66.47
+47 1581941813 TTWO.US KNEM 1.0000 19.12.2024 15:30:05 183.5000 209.8500 209.85 14.36% Cash Stocks 24.1940000000 0.00 0.00 0.00 528.87
+48 1581946031 TSLA.US KNEM 1.0000 19.12.2024 15:30:40 451.9900 355.8000 355.8 -21.28% Cash Stocks 24.1940000000 0.00 0.00 0.00 -2529.73
+49 1608122553 VWCE.DE XOFF 0.2934 13.01.2025 09:04:02 133.4800 138.7400 40.706316 3.94% Cash Stocks 24.9910000000 0.00 0.00 0.00 25.61
+50 1614555816 NVD.DE HREU 4.0000 16.01.2025 12:34:13 134.9800 129.9200 519.68 -3.75% Cash Stocks 24.9910000000 0.00 0.00 0.00 -753.74
+51 1615040922 TSM.US XOFF 0.7785 16.01.2025 15:58:46 217.8700 201.7900 157.093515 -7.38% Cash Stocks 24.1940000000 0.00 0.00 0.00 -456.39
+52 1615040983 TSM.US XOFF 2.0000 16.01.2025 15:58:48 217.8700 201.7900 403.58 -7.38% Cash Stocks 24.1940000000 0.00 0.00 0.00 -1172.49
+53 1625701320 VUSA.UK XOFF 0.1332 24.01.2025 13:02:18 93.3875 92.0525 12.261393 -1.43% Cash Stocks 29.8670100000 0.00 0.00 0.00 -8.35
+54 1625701357 VUSA.UK XOFF 7.0000 24.01.2025 13:02:19 93.3675 92.0525 644.3675 -1.41% Cash Stocks 29.8670100000 0.00 0.00 0.00 -434.51
+55 1631448584 MMM.US XOFF 0.7402 28.01.2025 19:45:29 150.7800 148.6100 110.001122 -1.44% Cash Stocks 24.1940000000 0.00 0.00 0.00 -85.17
+56 1631448606 MMM.US XOFF 2.0000 28.01.2025 19:45:31 150.7500 148.6100 297.22 -1.42% Cash Stocks 24.1940000000 0.00 0.00 0.00 -229.00
+57 1651784796 VWCE.DE XOFF 0.2819 11.02.2025 09:30:34 139.2800 138.7400 39.110806 -0.39% Cash Stocks 24.9400000000 0.00 0.00 0.00 -15.49`;
+
+  const LINE_RE = /^\d+\s+\d+\s+(\S+)\s+\S+\s+([\d.]+)\s+\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2}:\d{2}\s+([\d.]+)\s+([\d.]+)\s+[\d.]+\s+-?[\d.]+%\s+\S+\s+\S+\s+([\d.]+)/;
+
+  function currencyFromSymbol(symbol){
+    const suf = symbol.split('.').pop();
+    const map = {US:'USD', DE:'EUR', UK:'GBX', NO:'NOK', FR:'EUR', NL:'EUR', ES:'EUR', IT:'EUR', PL:'PLN'};
+    return map[suf] || suf || '—';
+  }
+
+  function parseStatement(text){
+    const lots = {};
+    text.split('\n').forEach(line=>{
+      const m = line.match(LINE_RE);
+      if(!m) return;
+      const symbol = m[1], qty = parseFloat(m[2]), open = parseFloat(m[3]), cur = parseFloat(m[4]), fx = parseFloat(m[5]);
+      if(!lots[symbol]) lots[symbol] = {symbol, qty:0, costSum:0, currentPrice:cur, fx:fx};
+      lots[symbol].qty += qty;
+      lots[symbol].costSum += qty*open;
+      lots[symbol].currentPrice = cur;
+      lots[symbol].fx = fx;
+    });
+    return Object.values(lots).filter(l=>l.qty>0).map(l=>({
+      id: 'h_'+Math.random().toString(36).slice(2,10),
+      symbol: l.symbol,
+      quantity: l.qty,
+      avgBuyPrice: l.costSum/l.qty,
+      currentPrice: l.currentPrice,
+      currency: currencyFromSymbol(l.symbol),
+      fxRate: l.fx
+    }));
+  }
+
+  function parseCzechNum(s){
+    if(s === undefined || s === null) return NaN;
+    s = String(s).trim();
+    if(s === '' || s === '-' || s === '->' || s === '<-') return NaN;
+    s = s.replace(/\u00A0/g,'').replace(/ /g,'').replace(/%/g,'').replace(',', '.');
+    return parseFloat(s);
+  }
+
+  function splitFioFields(line){
+    if(line.indexOf('\t') !== -1) return line.split('\t');
+    return line.split(/\s{2,}/);
+  }
+
+  function parseFioStatement(text){
+    const lines = text.split('\n');
+    const dateRe = /^\d{2}\.\d{2}\.\d{4}$/;
+    const blocks = [];
+    let current = [];
+    function flush(){ if(current.length) blocks.push(current); current = []; }
+    lines.forEach(line=>{
+      const fields = splitFioFields(line);
+      if(fields.length && dateRe.test((fields[0]||'').trim())){
+        current.push(fields.map(f=>f===undefined?'':f.trim()));
+      } else {
+        flush();
+      }
+    });
+    flush();
+
+    const results = [];
+    blocks.forEach(block=>{
+      let name = null;
+      for(const f of block){
+        const txt = f[f.length-1] || '';
+        const m = txt.match(/([A-Z0-9]{3,10})\s*-\s*Dividenda\s+([^(]+)/i);
+        if(m){ name = m[2].trim(); break; }
+      }
+      let last = null;
+      for(let i=block.length-1;i>=0;i--){
+        if(block[i].length >= 13 && !isNaN(parseCzechNum(block[i][7]))){ last = block[i]; break; }
+      }
+      if(!last) return;
+      const quantity = parseCzechNum(last[7]);
+      const currentPrice = parseCzechNum(last[8]);
+      const avgBuyPrice = parseCzechNum(last[12]);
+      const investedNet = Math.abs(parseCzechNum(last[6]));
+      const currentValue = parseCzechNum(last[9]);
+      const pl = parseCzechNum(last[10]);
+      const plPct = parseCzechNum(last[11]);
+      if(!quantity || quantity<=0 || isNaN(currentPrice) || isNaN(avgBuyPrice)) return;
+      results.push({
+        id: 'h_'+Math.random().toString(36).slice(2,10),
+        symbol: name || ('Pozice '+(results.length+1)),
+        quantity, avgBuyPrice, currentPrice,
+        currency: 'CZK', fxRate: 1,
+        // Fio počítá zisk včetně vyplacených dividend, proto uchováváme jeho vlastní součty
+        totalReturn: true,
+        investedTR: isNaN(investedNet)?quantity*avgBuyPrice:investedNet,
+        currentValueTR: isNaN(currentValue)?quantity*currentPrice:currentValue,
+        plTR: isNaN(pl)?0:pl,
+        plPctTR: isNaN(plPct)?0:plPct
+      });
+    });
+    return results;
+  }
+
+  let holdings = [];
+  let loaded = false;
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  async function save(){
+    try{
+      await window.storage.set('holdings-v1', JSON.stringify(holdings), false);
+    }catch(e){ console.error('Uložení selhalo', e); toast('Chyba při ukládání'); }
+  }
+
+  async function load(){
+    try{
+      const res = await window.storage.get('holdings-v1', false);
+      if(res && res.value){
+        holdings = JSON.parse(res.value);
+      } else {
+        holdings = parseStatement(SEED_TEXT).map(h=>({...h, platform:'XTB'}));
+        await save();
+        toast('Načten úvodní výpis XTB');
+      }
+    }catch(e){
+      holdings = parseStatement(SEED_TEXT).map(h=>({...h, platform:'XTB'}));
+      await save();
+    }
+    loaded = true;
+    render();
+  }
+
+  function fmt(n, d=2){
+    if(!isFinite(n)) return '—';
+    return n.toLocaleString('cs-CZ',{minimumFractionDigits:d, maximumFractionDigits:d});
+  }
+  function fmtCZK(n){
+    return fmt(n,0) + ' Kč';
+  }
+
+  function computeRow(h){
+    const fx = h.fxRate || 1;
+    if(h.totalReturn){
+      const invested = h.investedTR, currentValue = h.currentValueTR, pl = h.plTR, plPct = h.plPctTR;
+      return {
+        invested, currentValue, pl, plPct,
+        investedCZK: invested*fx, currentValueCZK: currentValue*fx, plCZK: pl*fx
+      };
+    }
+    const invested = h.quantity * h.avgBuyPrice;
+    const currentValue = h.quantity * h.currentPrice;
+    const pl = currentValue - invested;
+    const plPct = invested !== 0 ? (pl/invested*100) : 0;
+    return {
+      invested, currentValue, pl, plPct,
+      investedCZK: invested*fx,
+      currentValueCZK: currentValue*fx,
+      plCZK: pl*fx
+    };
+  }
+
+  function render(){
+    if(!loaded) return;
+    // summary
+    let totalInvestedCZK=0, totalCurrentCZK=0;
+    holdings.forEach(h=>{ const c = computeRow(h); totalInvestedCZK += c.investedCZK; totalCurrentCZK += c.currentValueCZK; });
+    const totalPlCZK = totalCurrentCZK - totalInvestedCZK;
+    const totalPlPct = totalInvestedCZK !== 0 ? (totalPlCZK/totalInvestedCZK*100) : 0;
+
+    document.getElementById('summary').innerHTML = `
+      <div class="card">
+        <div class="label">Investováno</div>
+        <div class="value">${fmtCZK(totalInvestedCZK)}</div>
+      </div>
+      <div class="card">
+        <div class="label">Aktuální hodnota</div>
+        <div class="value">${fmtCZK(totalCurrentCZK)}</div>
+      </div>
+      <div class="card">
+        <div class="label">Zisk / ztráta</div>
+        <div class="value ${totalPlCZK>=0?'pos':'neg'}">${totalPlCZK>=0?'+':''}${fmtCZK(totalPlCZK)}</div>
+      </div>
+      <div class="card">
+        <div class="label">Výkonnost</div>
+        <div class="value ${totalPlPct>=0?'pos':'neg'}">${totalPlPct>=0?'+':''}${fmt(totalPlPct,2)} %</div>
+        <div class="sub">${holdings.length} pozic</div>
+      </div>
+    `;
+
+    // group by platform
+    const platforms = {};
+    holdings.forEach(h=>{
+      const p = h.platform || 'Bez platformy';
+      if(!platforms[p]) platforms[p] = [];
+      platforms[p].push(h);
+    });
+
+    const container = document.getElementById('holdings');
+    if(holdings.length === 0){
+      container.innerHTML = '<div class="empty">Zatím žádné pozice. Přidej pozici ručně nebo vlož výpis z brokera.</div>';
+      return;
+    }
+
+    let html = '';
+    Object.keys(platforms).sort().forEach(pf=>{
+      const rows = platforms[pf];
+      let pfInvCZK=0, pfCurCZK=0;
+      rows.forEach(h=>{ const c=computeRow(h); pfInvCZK+=c.investedCZK; pfCurCZK+=c.currentValueCZK; });
+      const pfPl = pfCurCZK - pfInvCZK;
+
+      html += `<div class="platform-block">
+        <div class="platform-head">
+          <h2>${escapeHtml(pf)}</h2>
+          <div class="pf-total">${fmtCZK(pfCurCZK)} &nbsp;<span class="${pfPl>=0?'pos':'neg'}">${pfPl>=0?'+':''}${fmtCZK(pfPl)}</span></div>
         </div>
-    </header>
+        <table>
+          <thead>
+            <tr>
+              <th>Symbol</th><th>Měna</th><th>Množství</th><th>Nákup</th><th>Aktuální</th>
+              <th>Hodnota</th><th>Zisk/ztráta</th><th>%</th><th></th>
+            </tr>
+          </thead>
+          <tbody>`;
 
-    <main class="max-w-7xl mx-auto p-4 md:p-6">
-        
-        <div id="setup-container" class="max-w-xl mx-auto my-12 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl space-y-4">
-            <h2 class="text-lg font-bold text-indigo-400"><i class="fa-solid fa-key mr-2"></i>Načtení portfolia z Google Disku</h2>
-            <p class="text-sm text-gray-400">
-                Vlož celou URL adresu sdílení tvého souboru <span class="text-gray-200 font-mono">portfolio.json</span> z Google Disku (případně stačí jen ID souboru).
-            </p>
-            <div>
-                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Odkaz nebo ID souboru:</label>
-                <input type="text" id="file-id-input" placeholder="https://drive.google.com/file/d/XYZ123.../view?usp=sharing" 
-                       class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 text-gray-100">
-            </div>
-            <button id="auth-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow transition cursor-pointer">
-                <i class="fa-brands fa-google mr-2"></i>Přihlásit se & Načíst investice
-            </button>
-            <div id="status-message" class="text-center text-sm text-gray-400 pt-2 hidden"></div>
-        </div>
+      rows.forEach(h=>{
+        const c = computeRow(h);
+        html += `<tr data-id="${h.id}">
+          <td class="sym">${escapeHtml(h.symbol)}</td>
+          <td>${escapeHtml(h.currency||'')}</td>
+          <td><input class="editable" data-field="quantity" value="${trimNum(h.quantity)}"></td>
+          <td><input class="editable" data-field="avgBuyPrice" value="${trimNum(h.avgBuyPrice)}"></td>
+          <td><input class="editable" data-field="currentPrice" value="${trimNum(h.currentPrice)}"></td>
+          <td>${fmt(c.currentValue)}</td>
+          <td class="${c.pl>=0?'pos':'neg'}">${c.pl>=0?'+':''}${fmt(c.pl)}</td>
+          <td class="${c.plPct>=0?'pos':'neg'}">${c.plPct>=0?'+':''}${fmt(c.plPct,1)}%</td>
+          <td><button class="del-btn" data-del="${h.id}" title="Smazat">✕</button></td>
+        </tr>`;
+      });
 
-        <div id="dashboard" class="hidden space-y-6">
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <p class="text-sm text-gray-400 uppercase font-semibold">Celková investice</p>
-                    <p id="total-invested" class="text-2xl md:text-3xl font-bold mt-2">0,00 Kč</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <p class="text-sm text-gray-400 uppercase font-semibold">Aktuální hodnota</p>
-                    <p id="current-value" class="text-2xl md:text-3xl font-bold mt-2">0,00 Kč</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <p class="text-sm text-gray-400 uppercase font-semibold">Celkový Zisk / Ztráta (P&L)</p>
-                    <p id="total-pl" class="text-2xl md:text-3xl font-bold mt-2">0,00 Kč (0%)</p>
-                </div>
-            </div>
+      html += `</tbody></table></div>`;
+    });
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col items-center">
-                    <h3 class="text-lg font-semibold mb-4 text-left w-full">Rozložení portfolia</h3>
-                    <div class="w-64 h-64">
-                        <canvas id="portfolioChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col items-center">
-                    <h3 class="text-lg font-semibold mb-4 text-left w-full">Nejziskovější pozice</h3>
-                    <div class="w-full h-64">
-                        <canvas id="profitChart"></canvas>
-                    </div>
-                </div>
-            </div>
+    container.innerHTML = html;
 
-            <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-                <div class="p-6 border-b border-gray-700">
-                    <h3 class="text-lg font-semibold">Přehled jednotlivých akcií</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-750 text-gray-400 text-sm uppercase border-b border-gray-700">
-                                <th class="p-4">Ticker</th>
-                                <th class="p-4 text-right">Ks</th>
-                                <th class="p-4 text-right">Prům. nákupní cena</th>
-                                <th class="p-4 text-right">Aktuální cena</th>
-                                <th class="p-4 text-right">Investováno</th>
-                                <th class="p-4 text-right">Aktuální hodnota</th>
-                                <th class="p-4 text-right">Zisk / Ztráta</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stocks-table-body" class="divide-y divide-gray-700 text-sm">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
+    container.querySelectorAll('.editable').forEach(inp=>{
+      inp.addEventListener('change', onFieldChange);
+    });
+    container.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', onDelete);
+    });
+  }
 
-        </div>
-    </main>
+  function trimNum(n){
+    if(n === undefined || n === null || isNaN(n)) return '';
+    return (Math.round(n*10000)/10000).toString();
+  }
 
-    <script src="https://accounts.google.com/gsi/client"></script>
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
 
-    <script>
-        const CLIENT_ID = '214525132605-lhct9efr9td6etl9l5uvk9ralreu2cc0.apps.googleusercontent.com';
-        const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+  async function onFieldChange(e){
+    const tr = e.target.closest('tr');
+    const id = tr.getAttribute('data-id');
+    const field = e.target.getAttribute('data-field');
+    const val = parseFloat(e.target.value.replace(',','.'));
+    const h = holdings.find(x=>x.id===id);
+    if(!h) return;
+    h[field] = isNaN(val) ? 0 : val;
+    if(h.totalReturn){
+      delete h.totalReturn; delete h.investedTR; delete h.currentValueTR; delete h.plTR; delete h.plPctTR;
+      toast('Pozice přepnuta na přepočet z ceny (dividendy se dál nezapočítávají)');
+    }
+    await save();
+    render();
+  }
 
-        let tokenClient;
-        let accessToken = null;
-        let portfolioChartInstance = null;
-        let profitChartInstance = null;
+  async function onDelete(e){
+    const id = e.target.getAttribute('data-del');
+    holdings = holdings.filter(h=>h.id!==id);
+    await save();
+    render();
+    toast('Pozice smazána');
+  }
 
-        // Načtení uloženého odkazu z localStorage
-        document.getElementById('file-id-input').value = localStorage.getItem('user_drive_file_input') || '';
+  // panels
+  const panelAdd = document.getElementById('panel-add');
+  const panelImport = document.getElementById('panel-import');
+  document.getElementById('btn-add').addEventListener('click', ()=>{
+    panelImport.classList.remove('open');
+    panelAdd.classList.toggle('open');
+  });
+  document.getElementById('btn-import').addEventListener('click', ()=>{
+    panelAdd.classList.remove('open');
+    panelImport.classList.toggle('open');
+  });
 
-        // Funkce pro vytažení ID souboru z URL adresy
-        function extractFileId(input) {
-            if (!input) return null;
-            const match = input.match(/\/d\/([a-zA-Z0-9-_]+)/);
-            return match ? match[1] : input.trim();
-        }
+  document.getElementById('f-submit').addEventListener('click', async ()=>{
+    const platform = document.getElementById('f-platform').value.trim() || 'Ostatní';
+    const symbol = document.getElementById('f-symbol').value.trim();
+    const qty = parseFloat(document.getElementById('f-qty').value);
+    const buy = parseFloat(document.getElementById('f-buy').value);
+    const cur = parseFloat(document.getElementById('f-cur').value);
+    const ccy = document.getElementById('f-ccy').value.trim() || 'CZK';
+    const fx = parseFloat(document.getElementById('f-fx').value);
+    if(!symbol || isNaN(qty) || isNaN(buy)){
+      toast('Vyplň alespoň symbol, množství a nákupní cenu');
+      return;
+    }
+    holdings.push({
+      id: 'h_'+Math.random().toString(36).slice(2,10),
+      platform, symbol, quantity: qty, avgBuyPrice: buy,
+      currentPrice: isNaN(cur) ? buy : cur,
+      currency: ccy,
+      fxRate: isNaN(fx) ? 1 : fx
+    });
+    await save();
+    ['f-platform','f-symbol','f-qty','f-buy','f-cur','f-ccy','f-fx'].forEach(id=>document.getElementById(id).value='');
+    panelAdd.classList.remove('open');
+    render();
+    toast('Pozice přidána');
+  });
 
-        function updateStatus(msg, isError = false) {
-            const statusDiv = document.getElementById('status-message');
-            statusDiv.classList.remove('hidden');
-            statusDiv.innerHTML = msg;
-            if (isError) {
-                statusDiv.className = "text-center text-sm text-red-400 pt-2 font-semibold";
-            } else {
-                statusDiv.className = "text-center text-sm text-indigo-400 pt-2";
-            }
-        }
+  document.getElementById('i-submit').addEventListener('click', async ()=>{
+    const format = document.getElementById('i-format').value;
+    const platform = document.getElementById('i-platform').value.trim() || (format==='fio' ? 'Fio' : 'XTB');
+    const text = document.getElementById('i-text').value;
+    const parsed = format === 'fio' ? parseFioStatement(text) : parseStatement(text);
+    if(parsed.length === 0){
+      toast('Ve vloženém textu se nepodařilo najít žádné pozice');
+      return;
+    }
+    holdings = holdings.filter(h=>h.platform !== platform);
+    parsed.forEach(p=>{ p.platform = platform; holdings.push(p); });
+    await save();
+    document.getElementById('i-text').value='';
+    panelImport.classList.remove('open');
+    render();
+    toast(`Naimportováno ${parsed.length} pozic pro ${platform}`);
+  });
 
-        // Tlačítko - Spuštění přihlášení a stažení
-        document.getElementById('auth-submit-btn').onclick = () => {
-            const rawInput = document.getElementById('file-id-input').value;
-            const fileId = extractFileId(rawInput);
-
-            if (!fileId) {
-                updateStatus("Prosím, vlož platný odkaz nebo ID souboru portfolio.json.", true);
-                return;
-            }
-
-            localStorage.setItem('user_drive_file_input', rawInput);
-            updateStatus("<i class='fa-solid fa-user-shield fa-spin mr-2'></i>Otevírám přihlášení Google...");
-
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: SCOPES,
-                callback: async (response) => {
-                    if (response.error !== undefined) {
-                        updateStatus("Chyba přihlášení: " + response.error, true);
-                        return;
-                    }
-                    accessToken = response.access_token;
-                    updateStatus("<i class='fa-solid fa-cloud-download-alt fa-spin mr-2'></i>Stahuji portfolio.json...");
-                    fetchFileFromGoogleDrive(fileId);
-                },
-            });
-
-            tokenClient.requestAccessToken({ prompt: 'consent' });
-        };
-
-        // Stažení souboru z Google Drive API
-        async function fetchFileFromGoogleDrive(fileId) {
-            try {
-                const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error("Nepodařilo se stáhnout soubor. Zkontroluj správnost ID a zda jsi přihlášen pod správným Google účtem.");
-                }
-
-                const portfolioData = await response.json();
-                updateStatus("<i class='fa-solid fa-money-bill-trend-up fa-spin mr-2'></i>Stahuji aktuální ceny akcií...");
-                processAndRenderPortfolio(portfolioData);
-
-            } catch (err) {
-                updateStatus(err.message, true);
-            }
-        }
-
-        // Zpracování dat a výpočty přes AllOrigins proxy (řešení CORS chyb)
-        async function processAndRenderPortfolio(portfolioData) {
-            const stocks = {};
-            
-            portfolioData.transactions.forEach(t => {
-                const cleanTicker = t.ticker.split('.')[0];
-                if (!stocks[t.ticker]) {
-                    stocks[t.ticker] = {
-                        ticker: t.ticker,
-                        cleanTicker: cleanTicker,
-                        shares: 0,
-                        totalCostUSD: 0,
-                        currency_rate: t.currency_rate || 24.2
-                    };
-                }
-                stocks[t.ticker].shares += t.shares;
-                stocks[t.ticker].totalCostUSD += (t.shares * t.buy_price);
-            });
-
-            const tickersList = Object.keys(stocks);
-            
-            for (let ticker of tickersList) {
-                const clean = stocks[ticker].cleanTicker;
-                try {
-                    // AllOrigins proxy přebalí požadavek, aby ho prohlížeč nezablokoval na CORS ochraně
-                    const targetUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${stocks[ticker].ticker}`);
-                    const response = await fetch(`https://api.allorigins.win/get?url=${targetUrl}`);
-                    
-                    if (!response.ok) throw new Error("Proxy selhala");
-                    
-                    const wrapper = await response.json();
-                    const data = JSON.parse(wrapper.contents);
-                    
-                    stocks[ticker].currentPrice = data.chart.result[0].meta.regularMarketPrice;
-                } catch (e) {
-                    console.warn(`Nepodařilo se načíst online cenu pro ${ticker}, aktivuji záložní cenu.`, e);
-                    stocks[ticker].currentPrice = getRandomPriceFallback(clean);
-                }
-            }
-
-            let grandTotalInvestedCZK = 0;
-            let grandTotalCurrentValueCZK = 0;
-            const tableBody = document.getElementById('stocks-table-body');
-            tableBody.innerHTML = '';
-
-            const chartLabels = [];
-            const chartDataValues = [];
-            const profitLabels = [];
-            const profitValues = [];
-
-            Object.values(stocks).forEach(stock => {
-                const avgBuyPrice = stock.totalCostUSD / stock.shares;
-                const investedCZK = stock.totalCostUSD * stock.currency_rate;
-                const currentValCZK = (stock.shares * stock.currentPrice) * stock.currency_rate;
-                const plCZK = currentValCZK - investedCZK;
-                const plPercentage = (plCZK / investedCZK) * 100;
-
-                grandTotalInvestedCZK += investedCZK;
-                grandTotalCurrentValueCZK += currentValCZK;
-
-                chartLabels.push(stock.ticker);
-                chartDataValues.push(currentValCZK.toFixed(2));
-                
-                if (plCZK > 0) {
-                    profitLabels.push(stock.ticker);
-                    profitValues.push(plCZK.toFixed(2));
-                }
-
-                const plClass = plCZK >= 0 ? 'text-green-400' : 'text-red-400';
-                const plIcon = plCZK >= 0 ? 'fa-caret-up' : 'fa-caret-down';
-
-                const row = `
-                    <tr class="hover:bg-gray-750 transition">
-                        <td class="p-4 font-bold text-indigo-300">${stock.ticker}</td>
-                        <td class="p-4 text-right">${stock.shares.toFixed(4)}</td>
-                        <td class="p-4 text-right">$${avgBuyPrice.toFixed(2)}</td>
-                        <td class="p-4 text-right font-semibold text-yellow-400">$${stock.currentPrice.toFixed(2)}</td>
-                        <td class="p-4 text-right">${formatCZK(investedCZK)}</td>
-                        <td class="p-4 text-right font-semibold">${formatCZK(currentValCZK)}</td>
-                        <td class="p-4 text-right ${plClass} font-bold">
-                            <i class="fa-solid ${plIcon} mr-1"></i>${formatCZK(plCZK)} (${plPercentage.toFixed(2)}%)
-                        </td>
-                    </tr>
-                `;
-                tableBody.insertAdjacentHTML('beforeend', row);
-            });
-
-            const totalPLCZK = grandTotalCurrentValueCZK - grandTotalInvestedCZK;
-            const totalPLPercentage = (totalPLCZK / grandTotalInvestedCZK) * 100;
-
-            document.getElementById('total-invested').innerText = formatCZK(grandTotalInvestedCZK);
-            document.getElementById('current-value').innerText = formatCZK(grandTotalCurrentValueCZK);
-            
-            const plContainer = document.getElementById('total-pl');
-            plContainer.innerText = `${formatCZK(totalPLCZK)} (${totalPLPercentage.toFixed(2)}%)`;
-            plContainer.className = `text-2xl md:text-3xl font-bold mt-2 ${totalPLCZK >= 0 ? 'text-green-400' : 'text-red-400'}`;
-
-            document.getElementById('setup-container').classList.add('hidden');
-            document.getElementById('dashboard').classList.remove('hidden');
-            document.getElementById('logout-btn').classList.remove('hidden');
-
-            renderCharts(chartLabels, chartDataValues, profitLabels, profitValues);
-        }
-
-        // Odhlášení
-        document.getElementById('logout-btn').onclick = () => {
-            accessToken = null;
-            document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('logout-btn').classList.add('hidden');
-            document.getElementById('setup-container').classList.remove('hidden');
-            updateStatus("Byl jsi odhlášen.");
-        };
-
-        function formatCZK(amount) {
-            return new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' }).format(amount);
-        }
-
-        function getRandomPriceFallback(ticker) {
-            const mockPrices = { 'MSFT': 420, 'AAPL': 240, 'TSLA': 360, 'GOOGL': 185, 'JPM': 270, 'GRMN': 210, 'MMM': 145, 'VWCE': 138, 'VUSA': 92, 'TTWO': 210, 'SAP': 280, 'NVD': 130, 'TSM': 200, 'LLY': 870, 'ASO': 53, 'BRYN': 455, 'AGAS': 81, 'JNJ': 157 };
-            return mockPrices[ticker] || 100;
-        }
-
-        function renderCharts(portfolioLabels, portfolioData, profitLabels, profitData) {
-            if (portfolioChartInstance) portfolioChartInstance.destroy();
-            if (profitChartInstance) profitChartInstance.destroy();
-
-            const ctx1 = document.getElementById('portfolioChart').getContext('2d');
-            portfolioChartInstance = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: portfolioLabels,
-                    datasets: [{
-                        data: portfolioData,
-                        backgroundColor: ['#818cf8', '#34d399', '#f43f5e', '#fbbf24', '#a78bfa', '#22d3ee', '#f472b6', '#10b981', '#3b82f6'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            const ctx2 = document.getElementById('profitChart').getContext('2d');
-            profitChartInstance = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: profitLabels,
-                    datasets: [{
-                        label: 'Čistý zisk v CZK',
-                        data: profitData,
-                        backgroundColor: '#34d399',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } },
-                        x: { ticks: { color: '#9ca3af' } }
-                    }
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+  load();
+})();
+</script>
