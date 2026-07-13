@@ -1,3 +1,10 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Portfolio – investiční přehled</title>
 <style>
   :root{
     --bg:#12151c;
@@ -15,10 +22,16 @@
     --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   }
   *{box-sizing:border-box;}
-  #app{
+  html,body{background:var(--bg);margin:0;padding:0;}
+  body{
     background:var(--bg);
     color:var(--text);
     font-family:var(--sans);
+    min-height:100vh;
+  }
+  #app{
+    background:var(--bg);
+    color:var(--text);
     min-height:100%;
     padding:28px 20px 60px;
     line-height:1.4;
@@ -54,7 +67,7 @@
   }
   .card{background:var(--panel);padding:16px 18px;}
   .card .label{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
-  .card .value{font-family:var(--serif);font-size:22px;}
+  .card .value{font-family:var(--serif);font-size:22px;color:var(--text);}
   .card .value.pos{color:var(--green);}
   .card .value.neg{color:var(--red);}
   .card .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:4px;}
@@ -77,18 +90,19 @@
   tbody td{
     padding:9px 8px;font-family:var(--mono);font-size:13px;text-align:right;
     border-bottom:1px solid #212736;
+    color:var(--text);
   }
-  tbody td:first-child{text-align:left;font-family:var(--sans);font-size:13.5px;}
+  tbody td:first-child{text-align:left;font-family:var(--sans);font-size:13.5px;color:var(--text);}
   tbody td:nth-child(2){text-align:left;color:var(--muted);font-size:12px;}
   tbody tr:hover{background:var(--panel-2);}
-  .sym{font-weight:600;letter-spacing:.2px;}
-  .pos{color:var(--green);}
-  .neg{color:var(--red);}
+  .sym{font-weight:600;letter-spacing:.2px;color:var(--text);}
+  .pos{color:var(--green) !important;}
+  .neg{color:var(--red) !important;}
   .editable{
-    background:transparent;border:1px solid transparent;color:var(--text);
+    background:#0f1319;border:1px solid var(--border);color:var(--text);
     font-family:var(--mono);font-size:13px;text-align:right;width:78px;border-radius:4px;padding:3px 5px;
   }
-  .editable:hover{border-color:var(--border);}
+  .editable:hover{border-color:var(--gold-dim);}
   .editable:focus{outline:none;border-color:var(--gold-dim);background:#0f1319;}
   .del-btn{
     background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;
@@ -114,12 +128,12 @@
   .form-panel.open{display:block;}
   .form-panel h3{font-family:var(--serif);font-weight:400;font-size:16px;margin:0 0 14px;color:var(--gold);}
   .form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-  .form-row input, .form-row textarea{
+  .form-row input, .form-row textarea, .form-row select{
     background:#0f1319;border:1px solid var(--border);color:var(--text);
     padding:8px 10px;border-radius:6px;font-family:var(--sans);font-size:13px;
   }
   .form-row input{flex:1;min-width:110px;}
-  .form-row textarea{width:100%;min-height:120px;font-family:var(--mono);font-size:11.5px;resize:vertical;}
+  .form-row textarea{width:100%;min-height:120px;font-family:var(--mono);font-size:11.5px;resize:vertical;color:var(--text);background:#0f1319;}
   .hint{font-size:11.5px;color:var(--muted);margin-top:2px;margin-bottom:10px;}
   .empty{color:var(--muted);font-size:13px;padding:20px 0;text-align:center;font-family:var(--sans);}
   .toast{
@@ -129,8 +143,31 @@
     pointer-events:none;font-family:var(--sans);
   }
   .toast.show{opacity:1;}
+  .yearly-section{margin:38px 0 30px;}
+  .yearly-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .yearly-head h2{font-family:var(--serif);font-weight:400;font-size:19px;margin:0;color:var(--gold);}
+  .tabs{display:flex;gap:6px;}
+  .tab-btn{
+    font-family:var(--sans);font-size:12.5px;background:var(--panel);color:var(--muted);
+    border:1px solid var(--border);padding:6px 12px;border-radius:20px;cursor:pointer;
+  }
+  .tab-btn.active{background:var(--gold-dim);border-color:var(--gold-dim);color:#12151c;font-weight:600;}
+  .chart-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 14px 8px;}
+  .chart-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;}
+  .chart-legend{display:flex;gap:16px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:6px;}
+  .legend-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+  .tt-group{margin-bottom:2px;}
+  .tt-group-head{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--sans);font-size:13px;color:var(--text);padding:4px 2px 8px;font-weight:600;}
+  .tt-sum{font-family:var(--mono);font-size:13px;}
+  .tt-divider{height:2px;background:var(--gold-dim);margin:8px 0 16px;border-radius:2px;}
+  .tt-group table{width:100%;border-collapse:collapse;}
+  .tt-group td{padding:7px 4px;font-family:var(--mono);font-size:12.5px;border-bottom:1px solid #212736;color:var(--text);text-align:right;}
+  .tt-group td:first-child{text-align:left;font-family:var(--sans);font-weight:600;}
+  .tt-group td:nth-child(2){text-align:left;color:var(--muted);font-family:var(--sans);font-size:11px;}
+  .tt-empty{text-align:center;color:var(--muted);padding:14px 0;font-family:var(--sans);font-size:12.5px;}
 </style>
-
+</head>
+<body>
 <div id="app">
   <div class="wrap">
     <div class="eyebrow">Investiční přehled</div>
@@ -157,59 +194,82 @@
         <input id="f-ccy" placeholder="Měna (USD, EUR, CZK...)">
         <input id="f-fx" placeholder="Kurz na CZK (1 pokud v CZK)" type="number" step="any">
       </div>
+      <div class="form-row">
+        <input id="f-date" placeholder="Datum nákupu" type="date">
+      </div>
       <button class="btn primary" id="f-submit">Uložit pozici</button>
     </div>
 
     <div class="form-panel" id="panel-import">
       <h3>Vložit výpis z brokera</h3>
-      <div class="hint">Funguje s formátem "Otevřené pozice" (sloupce: NO, Pozice, Symbol, Trh, Objemy, Datum, Čas, Otevírací cena, Tržní cena, ...). Import <b>nahradí</b> všechny pozice pro zadanou platformu aktuálním obsahem výpisu.</div>
       <div class="form-row">
-        <select id="i-format" style="background:#0f1319;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-family:var(--sans);font-size:13px;">
+        <select id="i-format">
           <option value="xtb">XTB – Otevřené pozice</option>
-          <option value="fio" selected>Fio – Vývoj pozice na CP</option>
+          <option value="fio">Fio – Vývoj pozice na CP</option>
+          <option value="csv" selected>Vlastní seznam (víc platforem najednou)</option>
         </select>
-        <input id="i-platform" placeholder="Název platformy" value="Fio">
+        <input id="i-platform" placeholder="Název platformy" value="XTB">
       </div>
       <div class="form-row">
-        <textarea id="i-text" placeholder="Sem vlož text výpisu...">31.12.2018	 	 	 	 	 	0,00	0,00	537,50	0,00	0,00	 	 	 	->
-07.04.2022	Nákup	50,00	970,00	-48 500,00	140,70	-48 640,70	50,00	970,50	48 525,00	-115,70	-0,24%	970,00	 	Nákup
-29.07.2022	Nákup	3,00	1 082,00	-3 246,00	50,00	-51 936,70	53,00	1 093,00	57 929,00	5 992,30	11,54%	976,34	 	Nákup
-29.07.2022	Nákup	15,00	1 076,00	-16 140,00	66,49	-68 143,19	68,00	1 093,00	74 324,00	6 180,81	9,07%	998,32	 	Nákup
-01.11.2022	 	0,00	 	2 040,00	0,00	-66 103,19	68,00	811,00	55 148,00	-10 955,19	-16,08%	998,32	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
-06.01.2023	Nákup	10,00	790,00	-7 900,00	40,00	-74 043,19	78,00	791,00	61 698,00	-12 345,19	-16,23%	971,62	 	Nákup
-01.08.2023	 	0,00	 	9 613,50	0,00	-64 429,69	78,00	965,00	75 270,00	10 840,31	14,25%	971,62	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
-01.08.2024	 	0,00	 	3 447,60	0,00	-60 982,09	78,00	910,50	71 019,00	10 036,91	13,19%	971,62	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
-26.08.2024	Nákup	15,00	884,00	-13 260,00	56,41	-74 298,50	93,00	885,00	82 305,00	8 006,50	8,96%	957,48	 	Nákup
-03.09.2024	Nákup	5,00	864,00	-4 320,00	40,00	-78 658,50	98,00	860,00	84 280,00	5 621,50	6,00%	952,71	 	Nákup
-01.08.2025	 	0,00	 	3 916,00	0,00	-74 742,50	98,00	1 241,00	121 618,00	46 875,50	50,00%	952,71	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
-27.03.2026	CZK	 	 	 	393,60	-74 742,50	98,00	1 184,00	116 032,00	41 289,50	44,04%	952,71	 	<-   
-export Vývoj pozice na CP - KOMERČNÍ BANKA (BAAKOMB) - (1.1.2019 - 27.3.2026)
-Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozice CP	Close	Ocenění pozice (Close)	Zisk	Zisk v %	Prům. nákupní kurz	Prům. prodejní kurz	Text
-13.04.2022	Nákup	50,00	839,00	-41 950,00	146,80	-42 096,80	50,00	831,50	41 575,00	-521,80	-1,24%	839,00	 	Nákup
-06.05.2022	Nákup	10,00	765,00	-7 650,00	40,00	-49 786,80	60,00	750,00	45 000,00	-4 786,80	-9,61%	826,67	 	Nákup
-23.05.2022	 	0,00	 	1 861,50	0,00	-47 925,30	60,00	740,50	44 430,00	-3 495,30	-7,02%	826,67	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
-29.07.2022	Nákup	8,00	609,50	-4 876,00	50,00	-52 851,30	68,00	608,00	41 344,00	-11 507,30	-21,03%	801,12	 	Nákup
-22.12.2022	 	0,00	 	3 207,90	0,00	-49 643,40	68,00	660,50	44 914,00	-4 729,40	-8,64%	801,12	 	BAAKOMB - Dividenda KOMERČNÍ BANKA (po zdanění, daň 15%)
-14.03.2023	Nákup	20,00	713,00	-14 260,00	59,91	-63 963,31	88,00	708,00	62 304,00	-1 659,31	-2,40%	781,09	 	Nákup
-11.05.2023	Nákup	18,00	687,00	-12 366,00	53,28	-76 382,59	106,00	685,00	72 610,00	-3 772,59	-4,63%	765,11	 	Nákup
-22.05.2023	 	0,00	 	4 519,42	0,00	-71 863,17	106,00	656,50	69 589,00	-2 274,17	-2,79%	765,11	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
-28.05.2024	 	0,00	 	7 447,67	0,00	-64 415,50	106,00	777,00	82 362,00	17 946,50	22,03%	765,11	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
-06.08.2024	Nákup	15,00	764,00	-11 460,00	50,11	-75 925,61	121,00	757,00	91 597,00	15 671,39	16,86%	764,98	 	Nákup
-26.05.2025	 	0,00	 	9 390,30	0,00	-66 535,31	121,00	1 027,00	124 267,00	57 731,69	62,10%	764,98	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
-27.03.2026	CZK	 	 	 	400,10	-66 535,31	121,00	1 069,00	129 349,00	62 813,69	67,57%	764,98	 	<-</textarea>
+        <textarea id="i-text" placeholder="Sem vlož text výpisu...">Portu - První portfolio;XMK9 GY;X-TRACKERS MSCI Japan EUR Hedged UCITS ETF;EUR;9.4951;37.623;60.73;24.26
+Portu - První portfolio;CSPX LN;iShares Core S&P 500 UCITS ETF;USD;3.993;590.633;805.54;21.287
+Portu - První portfolio;IS3N GY;iShares Core MSCI EM IMI UCITS ETF;EUR;13.3412;31.292;48.8;24.26
+Portu - První portfolio;ZPRS GY;SPDR MSCI World Small Cap UCITS;EUR;8.3825;96.958;130.02;24.26
+Portu - První portfolio;SXR7 GY;iShares Core MSCI EMU UCITS ETF;EUR;4.6699;182.572;246.8;24.26
+Portu - První portfolio;3SUD GY;iShares J.P. Morgan USD EM Bond UCITS ETF;EUR;70.5105;4.769;5.33;24.26
+Portu - První portfolio;LQDA LN;iShares USD Corp Bond UCITS ETF;USD;46.7076;5.900;6.37;21.287
+Portu - První portfolio;DPYE LN;iShares Developed Markets Property Yield UCITS ETF;EUR;105.0358;5.631;6.44;24.26
+Portu - První portfolio;DTLA LN;iShares USD Treasury Bond 20+y UCITS ETF;USD;152.0993;4.537;4.68;21.287
+Portu - První portfolio;IGIL LN;iShares Global Inflation Linked Govt Bond UCITS ETF;USD;2.0782;157.512;165.46;21.287
+Portu - Technologický pokrok;SBIO LN;Invesco NASDAQ Biotech UCITS ETF;USD;10.0095;46.655;68.81;21.287
+Portu - Technologický pokrok;IUIT LN;iShares S&P 500 Information Technology Sector UCITS ETF;USD;23.311;33.328;49.8;21.287
+Portu - Technologický pokrok;USPY LN;L&G Cyber Security UCITS ETF;USD;24.661;28.415;44.28;21.287
+Portu - Technologický pokrok;2B76 GY;iShares Automation & Robotics UCITS ETF;EUR;68.8321;12.690;19.15;24.26
+Portu - Technologický pokrok;IEVD GY;iShares Electric Vehicles and Driving Technology UCITS ETF;EUR;57.2481;6.933;12.07;24.26
+Portu - Technologický pokrok;DRUP GY;Amundi MSCI Disruptive Technology UCITS ETF Acc;EUR;43.3367;14.121;19.59;24.26
+Portu - První portfolio;Hotovost;Hotovost CZK;CZK;4112.41;1;1;1
+Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1</textarea>
       </div>
-      <div class="hint">Formát „Fio" čeká sloupce oddělené tabulátorem (Datum, Směr, Množství, Cena, Objem, Poplatek, ..., Celková pozice CP, Close, Ocenění pozice, Zisk, Zisk %, Prům. nákupní kurz...). Pro každý cenný papír se použije poslední řádek (aktuální stav).</div>
+      <div class="hint">XTB / Fio formáty: přesně formát z výpisů brokera. Vlastní seznam: řádky ve tvaru Platforma;Symbol;Instrument;Měna;Množství;NákupníCena;AktuálníCena;Kurz na CZK — hodí se pro víc platforem/portfolií najednou (např. Portu). Import nahradí pozice u dotčených platforem.</div>
       <button class="btn primary" id="i-submit">Zpracovat výpis</button>
     </div>
 
     <div id="holdings"></div>
+
+    <div class="yearly-section">
+      <div class="yearly-head">
+        <h2>Časový test (3 roky)</h2>
+        <div class="tt-sum" id="tt-summary"></div>
+      </div>
+      <div class="chart-box">
+        <div class="tt-group" id="tt-passed"></div>
+        <div class="tt-divider"></div>
+        <div class="tt-group" id="tt-pending"></div>
+        <div class="chart-note">Časový test = 3 roky od prvního nákupu (u dokupovaných pozic se posuzuje každý nákup zvlášť — zde zjednodušeně podle nejstaršího nákupu, u dokupů část pozice ještě testem projít nemusela). Hotovost se nezapočítává.</div>
+      </div>
+    </div>
+
+    <div class="yearly-section">
+      <div class="yearly-head">
+        <h2>Roční výnosy</h2>
+        <div class="tabs" id="yearly-tabs">
+          <button class="tab-btn active" data-tab="fio">Fio</button>
+          <button class="tab-btn" data-tab="portu">Portu</button>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div id="yearly-legend" class="chart-legend"></div>
+        <div id="yearly-chart"></div>
+        <div id="yearly-note" class="chart-note"></div>
+      </div>
+    </div>
   </div>
   <div class="toast" id="toast"></div>
 </div>
 
 <script>
 (function(){
-  const SEED_TEXT = `1 1385996742 MSFT.US XOFF 0.4705 16.07.2024 15:30:03 454.3600 410.5400 193.15907 -9.64% Cash Stocks 24.1940000000 0.00 0.00 0.00 -416.02
+  const XTB_SEED = `1 1385996742 MSFT.US XOFF 0.4705 16.07.2024 15:30:03 454.3600 410.5400 193.15907 -9.64% Cash Stocks 24.1940000000 0.00 0.00 0.00 -416.02
 2 1385997469 AAPL.US XOFF 0.0933 16.07.2024 15:30:03 235.1800 241.4600 22.528218 2.67% Cash Stocks 24.1940000000 0.00 0.00 0.00 21.54
 3 1385997528 TSLA.US XOFF 0.0137 16.07.2024 15:30:03 255.4400 355.8000 4.87446 39.29% Cash Stocks 24.1940000000 0.00 0.00 0.00 33.91
 4 1385998261 GOOGL.US XOFF 0.2905 16.07.2024 15:30:03 187.4200 186.0900 54.059145 -0.71% Cash Stocks 24.1940000000 0.00 0.00 0.00 9.71
@@ -267,7 +327,53 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
 56 1631448606 MMM.US XOFF 2.0000 28.01.2025 19:45:31 150.7500 148.6100 297.22 -1.42% Cash Stocks 24.1940000000 0.00 0.00 0.00 -229.00
 57 1651784796 VWCE.DE XOFF 0.2819 11.02.2025 09:30:34 139.2800 138.7400 39.110806 -0.39% Cash Stocks 24.9400000000 0.00 0.00 0.00 -15.49`;
 
-  const LINE_RE = /^\d+\s+\d+\s+(\S+)\s+\S+\s+([\d.]+)\s+\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2}:\d{2}\s+([\d.]+)\s+([\d.]+)\s+[\d.]+\s+-?[\d.]+%\s+\S+\s+\S+\s+([\d.]+)/;
+  const FIO_SEED = `31.12.2018	 	 	 	 	 	0,00	0,00	537,50	0,00	0,00	 	 	 	->
+07.04.2022	Nákup	50,00	970,00	-48 500,00	140,70	-48 640,70	50,00	970,50	48 525,00	-115,70	-0,24%	970,00	 	Nákup
+29.07.2022	Nákup	3,00	1 082,00	-3 246,00	50,00	-51 936,70	53,00	1 093,00	57 929,00	5 992,30	11,54%	976,34	 	Nákup
+29.07.2022	Nákup	15,00	1 076,00	-16 140,00	66,49	-68 143,19	68,00	1 093,00	74 324,00	6 180,81	9,07%	998,32	 	Nákup
+01.11.2022	 	0,00	 	2 040,00	0,00	-66 103,19	68,00	811,00	55 148,00	-10 955,19	-16,08%	998,32	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+06.01.2023	Nákup	10,00	790,00	-7 900,00	40,00	-74 043,19	78,00	791,00	61 698,00	-12 345,19	-16,23%	971,62	 	Nákup
+01.08.2023	 	0,00	 	9 613,50	0,00	-64 429,69	78,00	965,00	75 270,00	10 840,31	14,25%	971,62	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+01.08.2024	 	0,00	 	3 447,60	0,00	-60 982,09	78,00	910,50	71 019,00	10 036,91	13,19%	971,62	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+26.08.2024	Nákup	15,00	884,00	-13 260,00	56,41	-74 298,50	93,00	885,00	82 305,00	8 006,50	8,96%	957,48	 	Nákup
+03.09.2024	Nákup	5,00	864,00	-4 320,00	40,00	-78 658,50	98,00	860,00	84 280,00	5 621,50	6,00%	952,71	 	Nákup
+01.08.2025	 	0,00	 	3 916,00	0,00	-74 742,50	98,00	1 241,00	121 618,00	46 875,50	50,00%	952,71	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+27.03.2026	CZK	 	 	 	393,60	-74 742,50	98,00	1 184,00	116 032,00	41 289,50	44,04%	952,71	 	<-   
+export Vývoj pozice na CP - KOMERČNÍ BANKA (BAAKOMB) - (1.1.2019 - 27.3.2026)
+Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozice CP	Close	Ocenění pozice (Close)	Zisk	Zisk v %	Prům. nákupní kurz	Prům. prodejní kurz	Text
+13.04.2022	Nákup	50,00	839,00	-41 950,00	146,80	-42 096,80	50,00	831,50	41 575,00	-521,80	-1,24%	839,00	 	Nákup
+06.05.2022	Nákup	10,00	765,00	-7 650,00	40,00	-49 786,80	60,00	750,00	45 000,00	-4 786,80	-9,61%	826,67	 	Nákup
+23.05.2022	 	0,00	 	1 861,50	0,00	-47 925,30	60,00	740,50	44 430,00	-3 495,30	-7,02%	826,67	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+29.07.2022	Nákup	8,00	609,50	-4 876,00	50,00	-52 851,30	68,00	608,00	41 344,00	-11 507,30	-21,03%	801,12	 	Nákup
+22.12.2022	 	0,00	 	3 207,90	0,00	-49 643,40	68,00	660,50	44 914,00	-4 729,40	-8,64%	801,12	 	BAAKOMB - Dividenda KOMERČNÍ BANKA (po zdanění, daň 15%)
+14.03.2023	Nákup	20,00	713,00	-14 260,00	59,91	-63 963,31	88,00	708,00	62 304,00	-1 659,31	-2,40%	781,09	 	Nákup
+11.05.2023	Nákup	18,00	687,00	-12 366,00	53,28	-76 382,59	106,00	685,00	72 610,00	-3 772,59	-4,63%	765,11	 	Nákup
+22.05.2023	 	0,00	 	4 519,42	0,00	-71 863,17	106,00	656,50	69 589,00	-2 274,17	-2,79%	765,11	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+28.05.2024	 	0,00	 	7 447,67	0,00	-64 415,50	106,00	777,00	82 362,00	17 946,50	22,03%	765,11	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+06.08.2024	Nákup	15,00	764,00	-11 460,00	50,11	-75 925,61	121,00	757,00	91 597,00	15 671,39	16,86%	764,98	 	Nákup
+26.05.2025	 	0,00	 	9 390,30	0,00	-66 535,31	121,00	1 027,00	124 267,00	57 731,69	62,10%	764,98	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+27.03.2026	CZK	 	 	 	400,10	-66 535,31	121,00	1 069,00	129 349,00	62 813,69	67,57%	764,98	 	<-`;
+
+  const PORTU_SEED = `Portu - První portfolio;XMK9 GY;X-TRACKERS MSCI Japan EUR Hedged UCITS ETF;EUR;9.4951;37.623;60.73;24.26;2024-04-02
+Portu - První portfolio;CSPX LN;iShares Core S&P 500 UCITS ETF;USD;3.993;590.633;805.54;21.287;2024-04-02
+Portu - První portfolio;IS3N GY;iShares Core MSCI EM IMI UCITS ETF;EUR;13.3412;31.292;48.8;24.26;2024-04-02
+Portu - První portfolio;ZPRS GY;SPDR MSCI World Small Cap UCITS;EUR;8.3825;96.958;130.02;24.26;2024-04-02
+Portu - První portfolio;SXR7 GY;iShares Core MSCI EMU UCITS ETF;EUR;4.6699;182.572;246.8;24.26;2024-04-02
+Portu - První portfolio;3SUD GY;iShares J.P. Morgan USD EM Bond UCITS ETF;EUR;70.5105;4.769;5.33;24.26;2024-04-02
+Portu - První portfolio;LQDA LN;iShares USD Corp Bond UCITS ETF;USD;46.7076;5.900;6.37;21.287;2024-04-02
+Portu - První portfolio;DPYE LN;iShares Developed Markets Property Yield UCITS ETF;EUR;105.0358;5.631;6.44;24.26;2024-04-02
+Portu - První portfolio;DTLA LN;iShares USD Treasury Bond 20+y UCITS ETF;USD;152.0993;4.537;4.68;21.287;2024-04-02
+Portu - První portfolio;IGIL LN;iShares Global Inflation Linked Govt Bond UCITS ETF;USD;2.0782;157.512;165.46;21.287;2024-04-02
+Portu - Technologický pokrok;SBIO LN;Invesco NASDAQ Biotech UCITS ETF;USD;10.0095;46.655;68.81;21.287;2024-10-14
+Portu - Technologický pokrok;IUIT LN;iShares S&P 500 Information Technology Sector UCITS ETF;USD;23.311;33.328;49.8;21.287;2024-10-14
+Portu - Technologický pokrok;USPY LN;L&G Cyber Security UCITS ETF;USD;24.661;28.415;44.28;21.287;2024-10-14
+Portu - Technologický pokrok;2B76 GY;iShares Automation & Robotics UCITS ETF;EUR;68.8321;12.690;19.15;24.26;2024-10-14
+Portu - Technologický pokrok;IEVD GY;iShares Electric Vehicles and Driving Technology UCITS ETF;EUR;57.2481;6.933;12.07;24.26;2024-10-14
+Portu - Technologický pokrok;DRUP GY;Amundi MSCI Disruptive Technology UCITS ETF Acc;EUR;43.3367;14.121;19.59;24.26;2024-10-14
+Portu - První portfolio;Hotovost;Hotovost CZK;CZK;4112.41;1;1;1;
+Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
+
+  const LINE_RE = /^\d+\s+\d+\s+(\S+)\s+\S+\s+([\d.]+)\s+(\d{2}\.\d{2}\.\d{4})\s+\d{2}:\d{2}:\d{2}\s+([\d.]+)\s+([\d.]+)\s+[\d.]+\s+-?[\d.]+%\s+\S+\s+\S+\s+([\d.]+)/;
 
   function currencyFromSymbol(symbol){
     const suf = symbol.split('.').pop();
@@ -275,17 +381,23 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
     return map[suf] || suf || '—';
   }
 
+  function czDateToIso(d){
+    const [dd,mm,yyyy] = d.split('.');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
   function parseStatement(text){
     const lots = {};
     text.split('\n').forEach(line=>{
       const m = line.match(LINE_RE);
       if(!m) return;
-      const symbol = m[1], qty = parseFloat(m[2]), open = parseFloat(m[3]), cur = parseFloat(m[4]), fx = parseFloat(m[5]);
-      if(!lots[symbol]) lots[symbol] = {symbol, qty:0, costSum:0, currentPrice:cur, fx:fx};
+      const symbol = m[1], qty = parseFloat(m[2]), dateIso = czDateToIso(m[3]), open = parseFloat(m[4]), cur = parseFloat(m[5]), fx = parseFloat(m[6]);
+      if(!lots[symbol]) lots[symbol] = {symbol, qty:0, costSum:0, currentPrice:cur, fx:fx, firstBuyDate:dateIso};
       lots[symbol].qty += qty;
       lots[symbol].costSum += qty*open;
       lots[symbol].currentPrice = cur;
       lots[symbol].fx = fx;
+      if(dateIso < lots[symbol].firstBuyDate) lots[symbol].firstBuyDate = dateIso;
     });
     return Object.values(lots).filter(l=>l.qty>0).map(l=>({
       id: 'h_'+Math.random().toString(36).slice(2,10),
@@ -294,7 +406,8 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
       avgBuyPrice: l.costSum/l.qty,
       currentPrice: l.currentPrice,
       currency: currencyFromSymbol(l.symbol),
-      fxRate: l.fx
+      fxRate: l.fx,
+      firstBuyDate: l.firstBuyDate
     }));
   }
 
@@ -340,6 +453,13 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
         if(block[i].length >= 13 && !isNaN(parseCzechNum(block[i][7]))){ last = block[i]; break; }
       }
       if(!last) return;
+      let firstBuyDate = null;
+      block.forEach(row=>{
+        if((row[1]||'').trim() === 'Nákup'){
+          const iso = czDateToIso(row[0].trim());
+          if(!firstBuyDate || iso < firstBuyDate) firstBuyDate = iso;
+        }
+      });
       const quantity = parseCzechNum(last[7]);
       const currentPrice = parseCzechNum(last[8]);
       const avgBuyPrice = parseCzechNum(last[12]);
@@ -353,47 +473,114 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
         symbol: name || ('Pozice '+(results.length+1)),
         quantity, avgBuyPrice, currentPrice,
         currency: 'CZK', fxRate: 1,
-        // Fio počítá zisk včetně vyplacených dividend, proto uchováváme jeho vlastní součty
         totalReturn: true,
         investedTR: isNaN(investedNet)?quantity*avgBuyPrice:investedNet,
         currentValueTR: isNaN(currentValue)?quantity*currentPrice:currentValue,
         plTR: isNaN(pl)?0:pl,
-        plPctTR: isNaN(plPct)?0:plPct
+        plPctTR: isNaN(plPct)?0:plPct,
+        firstBuyDate: firstBuyDate
       });
     });
     return results;
   }
 
+  function parseCsvStatement(text){
+    const results = [];
+    text.split('\n').forEach(line=>{
+      line = line.trim();
+      if(!line) return;
+      const parts = line.split(';').map(p=>p.trim());
+      if(parts.length < 7) return;
+      const [platform, symbol, instrument, currency, qtyS, buyS, curS, fxS, dateS] = parts;
+      const quantity = parseFloat(qtyS.replace(',','.'));
+      const avgBuyPrice = parseFloat(buyS.replace(',','.'));
+      const currentPrice = parseFloat(curS.replace(',','.'));
+      const fxRate = fxS !== undefined && fxS !== '' ? parseFloat(fxS.replace(',','.')) : 1;
+      if(!platform || !symbol || isNaN(quantity) || isNaN(avgBuyPrice) || isNaN(currentPrice)) return;
+      results.push({
+        id: 'h_'+Math.random().toString(36).slice(2,10),
+        platform, symbol, instrument: instrument || '', currency: currency || 'CZK',
+        quantity, avgBuyPrice, currentPrice, fxRate: isNaN(fxRate)?1:fxRate,
+        firstBuyDate: dateS && dateS.trim() ? dateS.trim() : null
+      });
+    });
+    return results;
+  }
+
+  const STORAGE_KEY = 'portfolio-holdings-v1';
   let holdings = [];
   let loaded = false;
+  let storageMode = 'local'; // 'claude' | 'local' | 'memory'
 
   function toast(msg){
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 1800);
+    setTimeout(()=>t.classList.remove('show'), 2200);
   }
 
   async function save(){
+    const json = JSON.stringify(holdings);
+    if(storageMode === 'claude'){
+      try{ await window.storage.set('holdings-v1', json, false); return; }
+      catch(e){ /* fall through to local */ }
+    }
     try{
-      await window.storage.set('holdings-v1', JSON.stringify(holdings), false);
-    }catch(e){ console.error('Uložení selhalo', e); toast('Chyba při ukládání'); }
+      localStorage.setItem(STORAGE_KEY, json);
+    }catch(e){
+      console.error('Uložení selhalo', e);
+      toast('Data se nepodařilo uložit do prohlížeče');
+    }
+  }
+
+  // Doplní firstBuyDate do dat uložených starší verzí aplikace
+  function migrateBuyDates(){
+    let changed = false;
+    const known = {};
+    [...parseStatement(XTB_SEED), ...parseFioStatement(FIO_SEED), ...parseCsvStatement(PORTU_SEED)].forEach(p=>{
+      if(p.firstBuyDate) known[p.symbol] = p.firstBuyDate;
+    });
+    holdings.forEach(h=>{
+      if(!h.firstBuyDate && known[h.symbol]){
+        h.firstBuyDate = known[h.symbol];
+        changed = true;
+      }
+    });
+    if(changed) save();
   }
 
   async function load(){
-    try{
-      const res = await window.storage.get('holdings-v1', false);
-      if(res && res.value){
-        holdings = JSON.parse(res.value);
-      } else {
-        holdings = parseStatement(SEED_TEXT).map(h=>({...h, platform:'XTB'}));
-        await save();
-        toast('Načten úvodní výpis XTB');
-      }
-    }catch(e){
-      holdings = parseStatement(SEED_TEXT).map(h=>({...h, platform:'XTB'}));
-      await save();
+    // Try Claude.ai artifact storage first (works inside claude.ai chat)
+    if(typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function'){
+      try{
+        const res = await window.storage.get('holdings-v1', false);
+        if(res && res.value){
+          storageMode = 'claude';
+          holdings = JSON.parse(res.value);
+          loaded = true; render(); return;
+        }
+        storageMode = 'claude';
+      }catch(e){ /* not available, fall back */ }
     }
+    // Fall back to localStorage (works when the file is downloaded and opened directly)
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        holdings = JSON.parse(raw);
+        migrateBuyDates();
+        loaded = true; render(); return;
+      }
+      storageMode = 'local';
+    }catch(e){
+      storageMode = 'memory';
+    }
+    // First run anywhere: seed with the statements provided so far
+    holdings = [
+      ...parseStatement(XTB_SEED).map(h=>({...h, platform:'XTB'})),
+      ...parseFioStatement(FIO_SEED).map(h=>({...h, platform:'Fio'})),
+      ...parseCsvStatement(PORTU_SEED)
+    ];
+    await save();
     loaded = true;
     render();
   }
@@ -402,34 +589,23 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
     if(!isFinite(n)) return '—';
     return n.toLocaleString('cs-CZ',{minimumFractionDigits:d, maximumFractionDigits:d});
   }
-  function fmtCZK(n){
-    return fmt(n,0) + ' Kč';
-  }
+  function fmtCZK(n){ return fmt(n,0) + ' Kč'; }
 
   function computeRow(h){
     const fx = h.fxRate || 1;
     if(h.totalReturn){
       const invested = h.investedTR, currentValue = h.currentValueTR, pl = h.plTR, plPct = h.plPctTR;
-      return {
-        invested, currentValue, pl, plPct,
-        investedCZK: invested*fx, currentValueCZK: currentValue*fx, plCZK: pl*fx
-      };
+      return { invested, currentValue, pl, plPct, investedCZK: invested*fx, currentValueCZK: currentValue*fx, plCZK: pl*fx };
     }
     const invested = h.quantity * h.avgBuyPrice;
     const currentValue = h.quantity * h.currentPrice;
     const pl = currentValue - invested;
     const plPct = invested !== 0 ? (pl/invested*100) : 0;
-    return {
-      invested, currentValue, pl, plPct,
-      investedCZK: invested*fx,
-      currentValueCZK: currentValue*fx,
-      plCZK: pl*fx
-    };
+    return { invested, currentValue, pl, plPct, investedCZK: invested*fx, currentValueCZK: currentValue*fx, plCZK: pl*fx };
   }
 
   function render(){
     if(!loaded) return;
-    // summary
     let totalInvestedCZK=0, totalCurrentCZK=0;
     holdings.forEach(h=>{ const c = computeRow(h); totalInvestedCZK += c.investedCZK; totalCurrentCZK += c.currentValueCZK; });
     const totalPlCZK = totalCurrentCZK - totalInvestedCZK;
@@ -455,7 +631,6 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
       </div>
     `;
 
-    // group by platform
     const platforms = {};
     holdings.forEach(h=>{
       const p = h.platform || 'Bez platformy';
@@ -509,13 +684,9 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
     });
 
     container.innerHTML = html;
-
-    container.querySelectorAll('.editable').forEach(inp=>{
-      inp.addEventListener('change', onFieldChange);
-    });
-    container.querySelectorAll('[data-del]').forEach(btn=>{
-      btn.addEventListener('click', onDelete);
-    });
+    container.querySelectorAll('.editable').forEach(inp=> inp.addEventListener('change', onFieldChange));
+    container.querySelectorAll('[data-del]').forEach(btn=> btn.addEventListener('click', onDelete));
+    renderTimeTest();
   }
 
   function trimNum(n){
@@ -551,7 +722,154 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
     toast('Pozice smazána');
   }
 
-  // panels
+  // --- Roční výnosy (dopočteno z historie transakcí, viz chat) ---
+  const YEARLY_FIO = [
+    {label:'2022', value:-15685},
+    {label:'2023', value:24251},
+    {label:'2024', value:12727},
+    {label:'2025', value:83314},
+    {label:"2026*", value:-504},
+  ];
+  const YEARLY_PORTU = {
+    labels: ['2024*','2025*','2026'],
+    series: [
+      {name:'První portfolio', color:'#c9a961', values:[6400, 300, 29500]},
+      {name:'Technologický pokrok', color:'#5c8ab8', values:[50, 4500, 34700]},
+    ]
+  };
+
+  function fmtSigned(n){
+    const s = Math.round(n).toLocaleString('cs-CZ');
+    return (n>=0?'+':'') + s + ' Kč';
+  }
+
+  function renderYearlyChart(tab){
+    const chartEl = document.getElementById('yearly-chart');
+    const legendEl = document.getElementById('yearly-legend');
+    const noteEl = document.getElementById('yearly-note');
+    const W = 320, H = 180, padTop = 10, padBottom = 26, padSide = 8;
+    const plotH = H - padTop - padBottom;
+
+    if(tab === 'fio'){
+      legendEl.innerHTML = '';
+      const maxAbs = Math.max(...YEARLY_FIO.map(d=>Math.abs(d.value)), 1);
+      const n = YEARLY_FIO.length;
+      const bw = (W - padSide*2) / n;
+      const zeroY = padTop + plotH * (maxAbs / (maxAbs*2));
+      let bars = '';
+      YEARLY_FIO.forEach((d,i)=>{
+        const x = padSide + i*bw + bw*0.18;
+        const barW = bw*0.64;
+        const h = Math.abs(d.value)/maxAbs * (plotH/2);
+        const y = d.value >= 0 ? zeroY - h : zeroY;
+        const color = d.value >= 0 ? '#5cb894' : '#cf5b4e';
+        bars += `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h,1.5)}" rx="2" fill="${color}"></rect>`;
+        bars += `<text x="${x+barW/2}" y="${d.value>=0? y-5 : y+h+13}" text-anchor="middle" font-size="9.5" fill="#8b93a5" font-family="SFMono-Regular,Consolas,monospace">${fmtSigned(d.value)}</text>`;
+        bars += `<text x="${x+barW/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="#8b93a5" font-family="-apple-system,sans-serif">${d.label}</text>`;
+      });
+      bars += `<line x1="${padSide}" y1="${zeroY}" x2="${W-padSide}" y2="${zeroY}" stroke="#2a3040" stroke-width="1"></line>`;
+      chartEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">${bars}</svg>`;
+      noteEl.textContent = 'ČEZ + Komerční banka dohromady, včetně vyplacených dividend. * rok 2026 jen do 27.3.2026 (poslední dostupný záznam).';
+    } else {
+      const {labels, series} = YEARLY_PORTU;
+      legendEl.innerHTML = series.map(s=>`<span><span class="legend-dot" style="background:${s.color}"></span>${s.name}</span>`).join('');
+      const allVals = series.flatMap(s=>s.values);
+      const maxAbs = Math.max(...allVals.map(Math.abs), 1);
+      const n = labels.length;
+      const groupW = (W - padSide*2) / n;
+      const barW = groupW*0.32;
+      const zeroY = padTop + plotH/2;
+      let bars = '';
+      labels.forEach((label,i)=>{
+        series.forEach((s,si)=>{
+          const v = s.values[i];
+          const x = padSide + i*groupW + groupW*0.14 + si*(barW+3);
+          const h = Math.abs(v)/maxAbs * (plotH/2);
+          const y = v >= 0 ? zeroY - h : zeroY;
+          bars += `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h,1.5)}" rx="2" fill="${s.color}"></rect>`;
+          bars += `<text x="${x+barW/2}" y="${v>=0? y-4 : y+h+11}" text-anchor="middle" font-size="8" fill="#8b93a5" font-family="SFMono-Regular,Consolas,monospace">${fmtSigned(v)}</text>`;
+        });
+        bars += `<text x="${padSide+i*groupW+groupW/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="#8b93a5" font-family="-apple-system,sans-serif">${label}</text>`;
+      });
+      bars += `<line x1="${padSide}" y1="${zeroY}" x2="${W-padSide}" y2="${zeroY}" stroke="#2a3040" stroke-width="1"></line>`;
+      chartEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">${bars}</svg>`;
+      noteEl.textContent = 'Odhad na základě poslední známé nákupní ceny a přibližného kurzu k danému datu — není přesné tržní ocenění. * roky 2024 a 2025 jsou dopočtené odhady, 2026 je přesná hodnota z výpisu k 30.6.2026.';
+    }
+  }
+
+  // --- Časový test (3 roky od nákupu) ---
+  function addYears(isoDate, years){
+    const d = new Date(isoDate + 'T00:00:00');
+    d.setFullYear(d.getFullYear() + years);
+    return d;
+  }
+  function fmtCzDate(d){
+    return d.toLocaleDateString('cs-CZ', {day:'numeric', month:'numeric', year:'numeric'});
+  }
+
+  function renderTimeTest(){
+    const passedEl = document.getElementById('tt-passed');
+    const pendingEl = document.getElementById('tt-pending');
+    const summaryEl = document.getElementById('tt-summary');
+    if(!passedEl) return;
+    const now = new Date();
+    const passed = [], pending = [], unknown = [];
+
+    holdings.forEach(h=>{
+      if(h.symbol === 'Hotovost') return;
+      const c = computeRow(h);
+      if(!h.firstBuyDate){ unknown.push({h, c}); return; }
+      const testDate = addYears(h.firstBuyDate, 3);
+      if(testDate <= now) passed.push({h, c, testDate});
+      else pending.push({h, c, testDate});
+    });
+
+    pending.sort((a,b)=>a.testDate - b.testDate);
+    passed.sort((a,b)=>b.c.currentValueCZK - a.c.currentValueCZK);
+
+    const passedSum = passed.reduce((s,x)=>s+x.c.currentValueCZK, 0);
+    const passedPl = passed.reduce((s,x)=>s+x.c.plCZK, 0);
+    const pendingSum = pending.reduce((s,x)=>s+x.c.currentValueCZK, 0);
+
+    summaryEl.innerHTML = `Bez daně lze prodat: <span class="pos">${fmtCZK(passedSum)}</span>`;
+
+    function rowHtml(x, showDate){
+      const {h, c, testDate} = x;
+      return `<tr>
+        <td>${escapeHtml(h.symbol)}</td>
+        <td>${escapeHtml(h.platform||'')}</td>
+        <td>${fmtCZK(c.currentValueCZK)}</td>
+        <td class="${c.plCZK>=0?'pos':'neg'}">${c.plCZK>=0?'+':''}${fmtCZK(c.plCZK)}</td>
+        <td>${showDate && testDate ? 'splní '+fmtCzDate(testDate) : (h.firstBuyDate ? 'od '+fmtCzDate(new Date(h.firstBuyDate+'T00:00:00')) : '')}</td>
+      </tr>`;
+    }
+
+    passedEl.innerHTML = `
+      <div class="tt-group-head">
+        <span>✓ Splnily časový test — prodej bez daně</span>
+        <span class="tt-sum">${fmtCZK(passedSum)} <span class="${passedPl>=0?'pos':'neg'}">(${passedPl>=0?'+':''}${fmtCZK(passedPl)})</span></span>
+      </div>
+      ${passed.length ? '<table><tbody>'+passed.map(x=>rowHtml(x,false)).join('')+'</tbody></table>' : '<div class="tt-empty">Zatím žádná pozice nesplnila časový test.</div>'}
+    `;
+
+    pendingEl.innerHTML = `
+      <div class="tt-group-head">
+        <span>⧗ Zatím nesplnily — při prodeji se zisk daní</span>
+        <span class="tt-sum">${fmtCZK(pendingSum)}</span>
+      </div>
+      ${pending.length ? '<table><tbody>'+pending.map(x=>rowHtml(x,true)).join('')+'</tbody></table>' : '<div class="tt-empty">Všechny pozice už test splnily.</div>'}
+      ${unknown.length ? '<div class="tt-empty">Bez data nákupu (nelze posoudit): '+unknown.map(x=>escapeHtml(x.h.symbol)).join(', ')+'</div>' : ''}
+    `;
+  }
+
+  document.getElementById('yearly-tabs').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tab-btn');
+    if(!btn) return;
+    document.querySelectorAll('#yearly-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderYearlyChart(btn.getAttribute('data-tab'));
+  });
+
   const panelAdd = document.getElementById('panel-add');
   const panelImport = document.getElementById('panel-import');
   document.getElementById('btn-add').addEventListener('click', ()=>{
@@ -571,6 +889,7 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
     const cur = parseFloat(document.getElementById('f-cur').value);
     const ccy = document.getElementById('f-ccy').value.trim() || 'CZK';
     const fx = parseFloat(document.getElementById('f-fx').value);
+    const buyDate = document.getElementById('f-date').value;
     if(!symbol || isNaN(qty) || isNaN(buy)){
       toast('Vyplň alespoň symbol, množství a nákupní cenu');
       return;
@@ -580,10 +899,11 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
       platform, symbol, quantity: qty, avgBuyPrice: buy,
       currentPrice: isNaN(cur) ? buy : cur,
       currency: ccy,
-      fxRate: isNaN(fx) ? 1 : fx
+      fxRate: isNaN(fx) ? 1 : fx,
+      firstBuyDate: buyDate || null
     });
     await save();
-    ['f-platform','f-symbol','f-qty','f-buy','f-cur','f-ccy','f-fx'].forEach(id=>document.getElementById(id).value='');
+    ['f-platform','f-symbol','f-qty','f-buy','f-cur','f-ccy','f-fx','f-date'].forEach(id=>document.getElementById(id).value='');
     panelAdd.classList.remove('open');
     render();
     toast('Pozice přidána');
@@ -591,8 +911,26 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
 
   document.getElementById('i-submit').addEventListener('click', async ()=>{
     const format = document.getElementById('i-format').value;
-    const platform = document.getElementById('i-platform').value.trim() || (format==='fio' ? 'Fio' : 'XTB');
     const text = document.getElementById('i-text').value;
+
+    if(format === 'csv'){
+      const parsed = parseCsvStatement(text);
+      if(parsed.length === 0){
+        toast('Ve vloženém textu se nepodařilo najít žádné pozice (formát: Platforma;Symbol;Instrument;Měna;Množství;NákupníCena;AktuálníCena;Kurz)');
+        return;
+      }
+      const platformsTouched = [...new Set(parsed.map(p=>p.platform))];
+      holdings = holdings.filter(h=>!platformsTouched.includes(h.platform));
+      parsed.forEach(p=>holdings.push(p));
+      await save();
+      document.getElementById('i-text').value='';
+      panelImport.classList.remove('open');
+      render();
+      toast(`Naimportováno ${parsed.length} pozic (${platformsTouched.join(', ')})`);
+      return;
+    }
+
+    const platform = document.getElementById('i-platform').value.trim() || (format==='fio' ? 'Fio' : 'XTB');
     const parsed = format === 'fio' ? parseFioStatement(text) : parseStatement(text);
     if(parsed.length === 0){
       toast('Ve vloženém textu se nepodařilo najít žádné pozice');
@@ -608,5 +946,8 @@ Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozi
   });
 
   load();
+  renderYearlyChart('fio');
 })();
 </script>
+</body>
+</html>
