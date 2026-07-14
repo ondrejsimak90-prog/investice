@@ -76,7 +76,13 @@
   .platform-head{
     display:flex;justify-content:space-between;align-items:baseline;
     padding-bottom:8px;margin-bottom:2px;border-bottom:1px solid var(--border);
+    cursor:pointer;user-select:none;
   }
+  .platform-head:hover h2{color:var(--gold);}
+  .pf-chevron{display:inline-block;transition:transform .18s;color:var(--gold-dim);font-size:12px;margin-right:8px;transform:rotate(-90deg);}
+  .platform-block.open .pf-chevron, #tt-section.open .pf-chevron, #exp-section.open .pf-chevron, #plan-section.open .pf-chevron{transform:rotate(0deg);}
+  .pf-body{display:none;}
+  .platform-block.open .pf-body{display:block;}
   .platform-head h2{font-family:var(--serif);font-weight:400;font-size:19px;margin:0;color:var(--gold);}
   .platform-head .pf-total{font-family:var(--mono);font-size:12.5px;color:var(--muted);}
 
@@ -165,6 +171,56 @@
   .tt-group td:first-child{text-align:left;font-family:var(--sans);font-weight:600;}
   .tt-group td:nth-child(2){text-align:left;color:var(--muted);font-family:var(--sans);font-size:11px;}
   .tt-empty{text-align:center;color:var(--muted);padding:14px 0;font-family:var(--sans);font-size:12.5px;}
+  /* --- Mobilní optimalizace --- */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  @media (max-width: 640px){
+    #app{padding:16px 10px 40px;}
+    h1{font-size:24px;margin-bottom:12px;}
+    .summary{grid-template-columns:repeat(2,1fr);}
+    .card{padding:12px 12px;}
+    .card .value{font-size:17px;}
+    .panel-toggle{flex-wrap:wrap;}
+    .btn{padding:9px 13px;font-size:12.5px;flex:1;min-width:130px;}
+    .form-row{flex-direction:column;}
+    .form-row input, .form-row select{width:100%;min-width:0;}
+    thead th{padding:8px 5px 5px;font-size:9px;}
+    tbody td{padding:8px 5px;font-size:12px;}
+    tbody td:first-child{font-size:12.5px;}
+    .editable{width:62px;font-size:12px;padding:3px 3px;}
+    .platform-head h2{font-size:16.5px;}
+    .platform-head .pf-total{font-size:11px;}
+    .yearly-head{flex-direction:column;align-items:flex-start;}
+    .tabs{flex-wrap:wrap;}
+    .tab-btn{padding:6px 10px;font-size:12px;}
+    .tt-group td{padding:6px 3px;font-size:11.5px;}
+    .tt-group td:nth-child(2){display:none;} /* na mobilu skryjeme sloupec platformy */
+    .chart-box{padding:12px 8px 6px;}
+    .del-btn{padding:2px 4px;font-size:14px;}
+  }
+  @media (max-width: 400px){
+    .summary{grid-template-columns:1fr 1fr;}
+    .card .value{font-size:15px;}
+    tbody td{font-size:11px;}
+    .editable{width:54px;}
+  }
+  .exp-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+  .exp-label{flex:0 0 150px;font-family:var(--sans);font-size:12.5px;color:var(--text);}
+  .exp-bar-wrap{flex:1;background:#0f1319;border-radius:4px;height:18px;overflow:hidden;}
+  .exp-bar{height:100%;border-radius:4px;background:var(--gold-dim);}
+  .exp-val{flex:0 0 150px;font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:right;}
+  .exp-subhead{font-family:var(--serif);font-size:15px;color:var(--gold);margin:16px 0 10px;}
+  .exp-subhead:first-child{margin-top:0;}
+  @media (max-width:640px){
+    .exp-label{flex-basis:95px;font-size:11px;}
+    .exp-val{flex-basis:110px;font-size:10px;}
+  }
+  .plan-item{display:flex;align-items:flex-start;gap:10px;padding:9px 4px;border-bottom:1px solid #212736;cursor:pointer;}
+  .plan-item:last-child{border-bottom:none;}
+  .plan-item input[type=checkbox]{margin-top:3px;accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;cursor:pointer;}
+  .plan-item .plan-text{font-family:var(--sans);font-size:13px;color:var(--text);line-height:1.45;}
+  .plan-item .plan-when{font-family:var(--mono);font-size:10.5px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:.06em;}
+  .plan-item.done .plan-text{color:var(--muted);text-decoration:line-through;}
+  .plan-progress{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -179,6 +235,14 @@
     <div class="panel-toggle">
       <button class="btn primary" id="btn-add">+ Přidat pozici</button>
       <button class="btn" id="btn-import">Vložit výpis</button>
+      <select id="sort-select" class="btn" style="cursor:pointer;">
+        <option value="default">Řazení: výchozí</option>
+        <option value="plDesc">Zisk Kč: nejvyšší</option>
+        <option value="plAsc">Zisk Kč: nejnižší</option>
+        <option value="pctDesc">%: nejvyšší</option>
+        <option value="pctAsc">%: nejnižší</option>
+        <option value="valDesc">Hodnota: nejvyšší</option>
+      </select>
     </div>
 
     <div class="form-panel" id="panel-add">
@@ -236,12 +300,35 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1</textarea>
 
     <div id="holdings"></div>
 
-    <div class="yearly-section">
-      <div class="yearly-head">
-        <h2>Časový test (3 roky)</h2>
+    <div class="yearly-section" id="plan-section">
+      <div class="yearly-head" id="plan-head" style="cursor:pointer;user-select:none;">
+        <h2><span class="pf-chevron">▼</span>Plán výběru 500 tis. (stavba, do 3/2027)</h2>
+        <div class="tt-sum" id="plan-summary"></div>
+      </div>
+      <div class="chart-box" id="plan-body" style="display:none;">
+        <div class="plan-progress" id="plan-progress"></div>
+        <div id="plan-items"></div>
+        <div class="chart-note">Zdroje: Fio ~205 tis. + Moneta ~252 tis. (testované vrstvy, konzervativní odhad) + ~40 tis. přesměrovaná měsíční investice = ~498 tis. Rezerva: ČEZ 2024 (~24 tis., daň ~900 Kč). Portu DCA běží dál beze změny.</div>
+      </div>
+    </div>
+
+    <div class="yearly-section" id="exp-section">
+      <div class="yearly-head" id="exp-head" style="cursor:pointer;user-select:none;">
+        <h2><span class="pf-chevron">▼</span>Přesahy a skutečná expozice</h2>
+        <div class="tt-sum" id="exp-summary"></div>
+      </div>
+      <div class="chart-box" id="exp-body" style="display:none;">
+        <div id="exp-content"></div>
+        <div class="chart-note">Podíly uvnitř ETF a fondů jsou odhady na základě typického složení (např. VWCE ~62 % USA, ~20 % velká tech sedmička; CSPX 100 % USA). Přesná čísla se v čase mění podle vah v indexech.</div>
+      </div>
+    </div>
+
+    <div class="yearly-section" id="tt-section">
+      <div class="yearly-head" id="tt-head" style="cursor:pointer;user-select:none;">
+        <h2><span class="pf-chevron">▼</span>Časový test (3 roky)</h2>
         <div class="tt-sum" id="tt-summary"></div>
       </div>
-      <div class="chart-box">
+      <div class="chart-box" id="tt-body" style="display:none;">
         <div class="tt-group" id="tt-passed"></div>
         <div class="tt-divider"></div>
         <div class="tt-group" id="tt-pending"></div>
@@ -253,8 +340,11 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1</textarea>
       <div class="yearly-head">
         <h2>Roční výnosy</h2>
         <div class="tabs" id="yearly-tabs">
-          <button class="tab-btn active" data-tab="fio">Fio</button>
+          <button class="tab-btn active" data-tab="total">Celkem</button>
+          <button class="tab-btn" data-tab="fio">Fio</button>
           <button class="tab-btn" data-tab="portu">Portu</button>
+          <button class="tab-btn" data-tab="moneta">Moneta</button>
+          <button class="tab-btn" data-tab="xtb">XTB</button>
         </div>
       </div>
       <div class="chart-box">
@@ -372,6 +462,52 @@ Portu - Technologický pokrok;IEVD GY;iShares Electric Vehicles and Driving Tech
 Portu - Technologický pokrok;DRUP GY;Amundi MSCI Disruptive Technology UCITS ETF Acc;EUR;43.3367;14.121;19.59;24.26;2024-10-14
 Portu - První portfolio;Hotovost;Hotovost CZK;CZK;4112.41;1;1;1;
 Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
+
+  const MONETA_SEED = `Moneta;GS Global Equity Income;Goldman Sachs Global Equity Income;CZK;0.7;14285.7143;22817.5857;1;2022-04-05
+Moneta;Fidelity World;Fidelity World;CZK;53.08;2114.0222;3146.0000;1;2022-01-17
+Moneta;UNIQA Global Equity;UNIQA Selection Global Equity;CZK;82411;2.2965;3.0738;1;2022-01-17
+Moneta;Petrus Active Value;Petrus Advisers Active Value Fund;CZK;4.17;1543.4604;1500.5683;1;2025-02-14`;
+
+  // Aktualizovaný stav XTB (výpis 07/2026): nákupní ceny a data převzaty z předchozího výpisu, u nových pozic (META, CSG) nákupní cena = aktuální
+  const XTB_SEED2 = `XTB;AAPL.US;Apple Inc;USD;2;228.016;289.010;21.287;2024-07-16
+XTB;ASO.US;Academy Sports & Outdoors;USD;8;50.500;47.070;21.287;2024-12-10
+XTB;BRYN.DE;Berkshire Hathaway B;EUR;3;450.634;435.150;24.26;2024-11-22
+XTB;CSG.NL;Czechoslovak Group;EUR;45;12.794;12.794;24.26;
+XTB;GOOGL.US;Alphabet A;USD;5;181.129;357.310;21.287;2024-07-16
+XTB;GRMN.US;Garmin Ltd;USD;1;172.512;237.350;21.287;2024-07-22
+XTB;JNJ.US;Johnson & Johnson;USD;1;159.875;253.760;21.287;2024-07-25
+XTB;JPM.US;JPMorgan Chase;USD;1;210.630;327.020;21.287;2024-07-22
+XTB;META.US;Meta Platforms A;USD;1;562.910;562.910;21.287;
+XTB;MMM.US;3M Co;USD;4;130.669;161.877;21.287;2024-07-22
+XTB;MSFT.US;Microsoft Corp;USD;1;440.700;372.880;21.287;2024-07-16
+XTB;NVD.DE;NVIDIA Corp;EUR;4;134.980;173.560;24.26;2025-01-16
+XTB;SAP.DE;SAP SE;EUR;5;223.500;133.800;24.26;2024-11-11
+XTB;TSLA.US;Tesla Inc;USD;2;327.509;420.590;21.287;2024-07-16
+XTB;TSM.US;Taiwan Semiconductor ADR;USD;2;217.870;478.030;21.287;2025-01-16
+XTB;TTWO.US;Take-Two Interactive;USD;6;178.547;249.110;21.287;2024-10-29
+XTB;VUSA.UK;Vanguard S&P 500 UCITS DIST;GBP;11;93.368;106.805;28.0;2025-01-24
+XTB – dcera;VWCE.DE;Vanguard FTSE All-World ACC;EUR;16;127.986;165.179;24.26;2024-10-07`;
+
+  // Přesný stav XTB z kompletní historie účtu (export 13.7.2026): vážené průměry nákupů vč. frakcí, LLY bez aktuální ceny (=nákupní)
+  const XTB_SEED3 = `XTB;AAPL.US;Apple Inc;USD;2.6302;213.022;289.01;21.287;2024-07-16
+XTB;ASO.US;Academy Sports & Outdoors;USD;8.2659;50.5;47.07;21.287;2024-12-10
+XTB;BRYN.DE;Berkshire Hathaway B;EUR;3.1093;450.634;435.15;24.26;2024-11-22
+XTB;CSG.NL;Czechoslovak Group;EUR;45.3261;31.198;12.794;24.26;2026-01-23
+XTB;GOOGL.US;Alphabet A;USD;5.4052;174.611;357.31;21.287;2024-07-16
+XTB;GRMN.US;Garmin Ltd;USD;1.2418;172.512;237.35;21.287;2024-07-22
+XTB;JNJ.US;Johnson & Johnson;USD;1.3305;159.875;253.76;21.287;2024-07-25
+XTB;JPM.US;JPMorgan Chase;USD;1.0171;210.63;327.02;21.287;2024-07-22
+XTB;LLY.US;Eli Lilly;USD;0.1362;750.01;750.01;21.287;2024-11-22
+XTB;META.US;Meta Platforms A;USD;1;615.33;562.91;21.287;2025-11-12
+XTB;MMM.US;3M Co;USD;4.8012;130.669;161.877;21.287;2024-07-22
+XTB;MSFT.US;Microsoft Corp;USD;1.8997;413.229;372.88;21.287;2024-07-16
+XTB;NVD.DE;NVIDIA Corp;EUR;4;134.98;173.56;24.26;2025-01-16
+XTB;SAP.DE;SAP SE;EUR;5.4144;202.772;133.8;24.26;2024-11-11
+XTB;TSLA.US;Tesla Inc;USD;2.4714;327.509;420.59;21.287;2024-07-16
+XTB;TSM.US;Taiwan Semiconductor ADR;USD;2.7785;217.87;478.03;21.287;2025-01-16
+XTB;TTWO.US;Take-Two Interactive;USD;6.5228;183.232;249.11;21.287;2024-10-29
+XTB;VUSA.UK;Vanguard S&P 500 UCITS DIST;GBP;11.6973;88.26;106.805;28.0;2025-01-24
+XTB – dcera;VWCE.DE;Vanguard FTSE All-World ACC;EUR;17.0045;131.64;165.179;24.26;2024-10-07`;
 
   const LINE_RE = /^\d+\s+\d+\s+(\S+)\s+\S+\s+([\d.]+)\s+(\d{2}\.\d{2}\.\d{4})\s+\d{2}:\d{2}:\d{2}\s+([\d.]+)\s+([\d.]+)\s+[\d.]+\s+-?[\d.]+%\s+\S+\s+\S+\s+([\d.]+)/;
 
@@ -510,6 +646,8 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
   const STORAGE_KEY = 'portfolio-holdings-v1';
   let holdings = [];
   let loaded = false;
+  const expandedPlatforms = new Set();
+  let sortMode = 'default';
   let storageMode = 'local'; // 'claude' | 'local' | 'memory'
 
   function toast(msg){
@@ -537,12 +675,30 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
   function migrateBuyDates(){
     let changed = false;
     const known = {};
-    [...parseStatement(XTB_SEED), ...parseFioStatement(FIO_SEED), ...parseCsvStatement(PORTU_SEED)].forEach(p=>{
+    [...parseStatement(XTB_SEED), ...parseFioStatement(FIO_SEED), ...parseCsvStatement(PORTU_SEED), ...parseCsvStatement(MONETA_SEED)].forEach(p=>{
       if(p.firstBuyDate) known[p.symbol] = p.firstBuyDate;
     });
     holdings.forEach(h=>{
       if(!h.firstBuyDate && known[h.symbol]){
         h.firstBuyDate = known[h.symbol];
+        changed = true;
+      }
+    });
+    // Doplnění nově přidané platformy Moneta do starších dat
+    if(!holdings.some(h=>h.platform === 'Moneta')){
+      parseCsvStatement(MONETA_SEED).forEach(p=>holdings.push(p));
+      changed = true;
+    }
+    // Aktualizace XTB na přesná data z kompletní historie (pozná se podle chybějící LLY.US)
+    if(holdings.some(h=>h.platform === 'XTB') && !holdings.some(h=>h.platform === 'XTB' && h.symbol === 'LLY.US')){
+      holdings = holdings.filter(h=>h.platform !== 'XTB');
+      parseCsvStatement(XTB_SEED3).forEach(p=>holdings.push(p));
+      changed = true;
+    }
+    // Oddělení spoření pro dceru: VWCE má vlastní platformu
+    holdings.forEach(h=>{
+      if(h.platform === 'XTB' && h.symbol === 'VWCE.DE'){
+        h.platform = 'XTB – dcera';
         changed = true;
       }
     });
@@ -576,9 +732,10 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
     }
     // First run anywhere: seed with the statements provided so far
     holdings = [
-      ...parseStatement(XTB_SEED).map(h=>({...h, platform:'XTB'})),
+      ...parseCsvStatement(XTB_SEED3),
       ...parseFioStatement(FIO_SEED).map(h=>({...h, platform:'Fio'})),
-      ...parseCsvStatement(PORTU_SEED)
+      ...parseCsvStatement(PORTU_SEED),
+      ...parseCsvStatement(MONETA_SEED)
     ];
     await save();
     loaded = true;
@@ -649,18 +806,32 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
       const rows = platforms[pf];
       let pfInvCZK=0, pfCurCZK=0;
       rows.forEach(h=>{ const c=computeRow(h); pfInvCZK+=c.investedCZK; pfCurCZK+=c.currentValueCZK; });
+      if(sortMode !== 'default'){
+        rows.sort((a,b)=>{
+          const ca = computeRow(a), cb = computeRow(b);
+          switch(sortMode){
+            case 'plDesc': return cb.plCZK - ca.plCZK;
+            case 'plAsc': return ca.plCZK - cb.plCZK;
+            case 'pctDesc': return cb.plPct - ca.plPct;
+            case 'pctAsc': return ca.plPct - cb.plPct;
+            case 'valDesc': return cb.currentValueCZK - ca.currentValueCZK;
+            default: return 0;
+          }
+        });
+      }
       const pfPl = pfCurCZK - pfInvCZK;
 
-      html += `<div class="platform-block">
-        <div class="platform-head">
-          <h2>${escapeHtml(pf)}</h2>
+      html += `<div class="platform-block${expandedPlatforms.has(pf)?' open':''}" data-pf="${escapeHtml(pf)}">
+        <div class="platform-head" data-toggle="${escapeHtml(pf)}">
+          <h2><span class="pf-chevron">▼</span>${escapeHtml(pf)}</h2>
           <div class="pf-total">${fmtCZK(pfCurCZK)} &nbsp;<span class="${pfPl>=0?'pos':'neg'}">${pfPl>=0?'+':''}${fmtCZK(pfPl)}</span></div>
         </div>
-        <table>
+        <div class="pf-body">
+        <div class="table-scroll"><table>
           <thead>
             <tr>
               <th>Symbol</th><th>Měna</th><th>Množství</th><th>Nákup</th><th>Aktuální</th>
-              <th>Hodnota</th><th>Zisk/ztráta</th><th>%</th><th></th>
+              <th>Hodnota Kč</th><th>Zisk/ztráta Kč</th><th>%</th><th></th>
             </tr>
           </thead>
           <tbody>`;
@@ -673,20 +844,29 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
           <td><input class="editable" data-field="quantity" value="${trimNum(h.quantity)}"></td>
           <td><input class="editable" data-field="avgBuyPrice" value="${trimNum(h.avgBuyPrice)}"></td>
           <td><input class="editable" data-field="currentPrice" value="${trimNum(h.currentPrice)}"></td>
-          <td>${fmt(c.currentValue)}</td>
-          <td class="${c.pl>=0?'pos':'neg'}">${c.pl>=0?'+':''}${fmt(c.pl)}</td>
+          <td>${fmt(c.currentValueCZK,0)}</td>
+          <td class="${c.plCZK>=0?'pos':'neg'}">${c.plCZK>=0?'+':''}${fmt(c.plCZK,0)}</td>
           <td class="${c.plPct>=0?'pos':'neg'}">${c.plPct>=0?'+':''}${fmt(c.plPct,1)}%</td>
           <td><button class="del-btn" data-del="${h.id}" title="Smazat">✕</button></td>
         </tr>`;
       });
 
-      html += `</tbody></table></div>`;
+      html += `</tbody></table></div></div></div>`;
     });
 
     container.innerHTML = html;
     container.querySelectorAll('.editable').forEach(inp=> inp.addEventListener('change', onFieldChange));
     container.querySelectorAll('[data-del]').forEach(btn=> btn.addEventListener('click', onDelete));
+    container.querySelectorAll('[data-toggle]').forEach(head=>{
+      head.addEventListener('click', (e)=>{
+        if(e.target.closest('input') || e.target.closest('button')) return;
+        const pf = head.getAttribute('data-toggle');
+        if(expandedPlatforms.has(pf)) expandedPlatforms.delete(pf); else expandedPlatforms.add(pf);
+        head.closest('.platform-block').classList.toggle('open');
+      });
+    });
     renderTimeTest();
+    renderExposure();
   }
 
   function trimNum(n){
@@ -738,6 +918,27 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
     ]
   };
 
+  const YEARLY_XTB = [
+    {label:'2024', value:24928},
+    {label:'2025–26*', value:60435},
+  ];
+
+  const YEARLY_TOTAL = [
+    {label:'2022', value:-23531},
+    {label:'2023', value:50272},
+    {label:'2024', value:85686},
+    {label:'2025', value:111884},
+    {label:'2026*', value:104796},
+  ];
+
+  const YEARLY_MONETA = [
+    {label:'2022', value:-7846},
+    {label:'2023', value:26021},
+    {label:'2024', value:41581},
+    {label:'2025', value:23770},
+    {label:'2026*', value:41100},
+  ];
+
   function fmtSigned(n){
     const s = Math.round(n).toLocaleString('cs-CZ');
     return (n>=0?'+':'') + s + ' Kč';
@@ -750,14 +951,15 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
     const W = 320, H = 180, padTop = 10, padBottom = 26, padSide = 8;
     const plotH = H - padTop - padBottom;
 
-    if(tab === 'fio'){
+    if(tab === 'fio' || tab === 'moneta' || tab === 'total' || tab === 'xtb'){
       legendEl.innerHTML = '';
-      const maxAbs = Math.max(...YEARLY_FIO.map(d=>Math.abs(d.value)), 1);
-      const n = YEARLY_FIO.length;
+      const data = tab === 'fio' ? YEARLY_FIO : (tab === 'moneta' ? YEARLY_MONETA : (tab === 'xtb' ? YEARLY_XTB : YEARLY_TOTAL));
+      const maxAbs = Math.max(...data.map(d=>Math.abs(d.value)), 1);
+      const n = data.length;
       const bw = (W - padSide*2) / n;
       const zeroY = padTop + plotH * (maxAbs / (maxAbs*2));
       let bars = '';
-      YEARLY_FIO.forEach((d,i)=>{
+      data.forEach((d,i)=>{
         const x = padSide + i*bw + bw*0.18;
         const barW = bw*0.64;
         const h = Math.abs(d.value)/maxAbs * (plotH/2);
@@ -769,7 +971,13 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
       });
       bars += `<line x1="${padSide}" y1="${zeroY}" x2="${W-padSide}" y2="${zeroY}" stroke="#2a3040" stroke-width="1"></line>`;
       chartEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">${bars}</svg>`;
-      noteEl.textContent = 'ČEZ + Komerční banka dohromady, včetně vyplacených dividend. * rok 2026 jen do 27.3.2026 (poslední dostupný záznam).';
+      noteEl.textContent = tab === 'fio'
+        ? 'ČEZ + Komerční banka dohromady, včetně vyplacených dividend. * rok 2026 jen do 27.3.2026 (poslední dostupný záznam).'
+        : (tab === 'moneta'
+          ? 'Všechny 4 fondy dohromady (rozdíl hodnota − investováno mezi konci let, odečteny vklady). Hodnoty ke koncům let z grafu Moneta. * rok 2026 do 5.7.2026.'
+          : (tab === 'xtb'
+            ? 'Přesně z kompletní historie účtu: 2024 = nerealizovaný zisk k 17.1.2025 + dividendy + úroky. 2025–26 = realizované obchody (+26,3 tis.), dividendy, úroky a změna nerealizovaného zisku. * Bez výpisu ke konci 2025 nelze období rozdělit po letech.'
+            : 'Fio + Portu + Moneta + XTB 2024. XTB zisk za 2025–26 (+60 435 Kč) nelze rozdělit po letech, v součtech 2025/2026 chybí. Portu 2024–2025 je odhad. * 2026 je neúplný rok.'));
     } else {
       const {labels, series} = YEARLY_PORTU;
       legendEl.innerHTML = series.map(s=>`<span><span class="legend-dot" style="background:${s.color}"></span>${s.name}</span>`).join('');
@@ -945,8 +1153,153 @@ Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
     toast(`Naimportováno ${parsed.length} pozic pro ${platform}`);
   });
 
+  document.getElementById('sort-select').addEventListener('change', (e)=>{
+    sortMode = e.target.value;
+    render();
+  });
+
+  // --- Přesahy a expozice (odhady složení ETF/fondů) ---
+  // mag7 = podíl velké tech sedmičky (AAPL/MSFT/GOOGL/AMZN/META/NVDA/TSLA), us = podíl USA, cz = ČR, bond = dluhopis, cash = hotovost, core = široké akciové jádro
+  const EXPOSURE_MAP = {
+    'AAPL.US':{mag7:1,us:1},'MSFT.US':{mag7:1,us:1},'GOOGL.US':{mag7:1,us:1},'META.US':{mag7:1,us:1},
+    'NVD.DE':{mag7:1,us:1},'TSLA.US':{mag7:1,us:1},
+    'ASO.US':{us:1},'BRYN.DE':{us:1},'GRMN.US':{us:1},'JNJ.US':{us:1},'JPM.US':{us:1},'MMM.US':{us:1},'TTWO.US':{us:1},
+    'TSM.US':{},'SAP.DE':{},'CSG.NL':{cz:1},
+    'VUSA.UK':{us:1,mag7:0.33,core:1},'VWCE.DE':{us:0.62,mag7:0.20,core:1},
+    'ČEZ':{cz:1},'Komerční banka':{cz:1},
+    'CSPX LN':{us:1,mag7:0.33,core:1},'ZPRS GY':{us:0.55,core:1},'SXR7 GY':{},'IS3N GY':{},'XMK9 GY':{},
+    '3SUD GY':{bond:1},'LQDA LN':{bond:1},'DTLA LN':{bond:1},'IGIL LN':{bond:1},
+    'SBIO LN':{us:1},'IUIT LN':{us:1,mag7:0.55},'USPY LN':{us:0.7,mag7:0.05},
+    '2B76 GY':{us:0.55,mag7:0.10},'IEVD GY':{us:0.40,mag7:0.15},'DRUP GY':{us:0.70,mag7:0.25},
+    'Fidelity World':{us:0.70,mag7:0.22,core:1},'UNIQA Global Equity':{us:0.65,mag7:0.20,core:1},
+    'GS Global Equity Income':{us:0.60,mag7:0.10,core:1},'Petrus Active Value':{},
+    'Hotovost':{cash:1}
+  };
+
+  function renderExposure(){
+    const el = document.getElementById('exp-content');
+    const sumEl = document.getElementById('exp-summary');
+    if(!el) return;
+    let total=0, mag7=0, us=0, cz=0, bond=0, cash=0;
+    const corePerPlatform = {};
+    holdings.forEach(h=>{
+      const c = computeRow(h);
+      const v = c.currentValueCZK;
+      total += v;
+      const m = EXPOSURE_MAP[h.symbol] || {};
+      mag7 += v*(m.mag7||0);
+      us += v*(m.us||0);
+      cz += v*(m.cz||0);
+      bond += v*(m.bond||0);
+      cash += v*(m.cash||0);
+      if(m.core){
+        const pf = h.platform||'?';
+        corePerPlatform[pf] = (corePerPlatform[pf]||0) + v;
+      }
+    });
+    const coreTotal = Object.values(corePerPlatform).reduce((a,b)=>a+b,0);
+
+    function bar(label, val, color){
+      const pct = total>0 ? val/total*100 : 0;
+      return `<div class="exp-row">
+        <div class="exp-label">${label}</div>
+        <div class="exp-bar-wrap"><div class="exp-bar" style="width:${Math.min(pct,100).toFixed(1)}%;background:${color}"></div></div>
+        <div class="exp-val">${fmtCZK(val)} · ${pct.toFixed(1)} %</div>
+      </div>`;
+    }
+
+    let html = '<div class="exp-subhead">Skutečná expozice napříč platformami</div>';
+    html += bar('Velká tech 7 (Mag7)', mag7, '#c9a961');
+    html += bar('USA celkem', us, '#5c8ab8');
+    html += bar('Česká republika', cz, '#5cb894');
+    html += bar('Dluhopisy', bond, '#8b93a5');
+    html += bar('Hotovost', cash, '#4a5266');
+
+    html += '<div class="exp-subhead">Globální akciové jádro — stejná expozice na více místech</div>';
+    Object.keys(corePerPlatform).sort().forEach(pf=>{
+      html += bar(pf, corePerPlatform[pf], '#8f7c4d');
+    });
+    html += bar('Jádro celkem', coreTotal, '#c9a961');
+
+    el.innerHTML = html;
+    sumEl.innerHTML = `Mag7: <span style="color:var(--gold)">${(total>0?mag7/total*100:0).toFixed(0)} %</span> · USA: ${(total>0?us/total*100:0).toFixed(0)} %`;
+  }
+
+  // --- Plán výběru (checkboxy s uložením stavu) ---
+  const PLAN_KEY = 'portfolio-plan-v1';
+  const PLAN_STEPS = [
+    {id:'p1', when:'Hned', text:'Zrušit trvalý příkaz do Monety (5 000 Kč/měs.). Portu nechat běžet.'},
+    {id:'p2', when:'Hned', text:'Přesměrovat 5 000 Kč/měs. na spořicí účet „stavba" — návyk zůstává, jen se mění cíl.'},
+    {id:'p3', when:'Podzim 2026', text:'Fio: prodat ČEZ 78 ks (~92 tis. Kč) — vrstvy 2022–2023, bez daně.'},
+    {id:'p4', when:'Podzim 2026', text:'Fio: prodat Komerční banku 106 ks (~113 tis. Kč) — vrstvy 2022–2023, bez daně.'},
+    {id:'p5', when:'Před odkupem', text:'Moneta: písemně si potvrdit, že odkupy párují FIFO (nejstarší kusy první).'},
+    {id:'p6', when:'12/2026–1/2027', text:'Moneta: odkoupit celý GS Global Equity Income (~16 tis. Kč, jednorázovka 4/2022).'},
+    {id:'p7', when:'12/2026–1/2027', text:'Moneta: odkoupit nejstarší vrstvy UNIQA (~149 tis. Kč, vklady do 3/2024).'},
+    {id:'p8', when:'12/2026–1/2027', text:'Moneta: odkoupit nejstarší vrstvy Fidelity (~88 tis. Kč, vklady do 3/2024).'},
+    {id:'p9', when:'Rezerva', text:'Pokud chybí: doprodat ČEZ 20 ks z 2024 (~24 tis. Kč, daň jen ~900 Kč).'},
+    {id:'p10', when:'Průběžně', text:'Výtěžek držet na spořicím účtu / krátkém termíňáku — ne zpět do akcií (horizont < 1 rok).'},
+    {id:'p11', when:'Po 3/2027', text:'Obnovit pravidelných 5 000 Kč/měs. — investiční plán na FWRA (Invesco FTSE All-World, TER 0,15 %) na XTB. Stejný index jako dceřino VWCE, ale oddělená pozice.'},
+  ];
+
+  function loadPlanState(){
+    try{ return JSON.parse(localStorage.getItem(PLAN_KEY)) || {}; }catch(e){ return {}; }
+  }
+  function savePlanState(st){
+    try{ localStorage.setItem(PLAN_KEY, JSON.stringify(st)); }catch(e){}
+  }
+
+  function renderPlan(){
+    const el = document.getElementById('plan-items');
+    const prog = document.getElementById('plan-progress');
+    const sum = document.getElementById('plan-summary');
+    if(!el) return;
+    const st = loadPlanState();
+    const done = PLAN_STEPS.filter(s=>st[s.id]).length;
+    prog.textContent = `Splněno ${done} z ${PLAN_STEPS.length} kroků`;
+    sum.innerHTML = done === PLAN_STEPS.length
+      ? '<span class="pos">✓ Hotovo</span>'
+      : `${done}/${PLAN_STEPS.length}`;
+    el.innerHTML = PLAN_STEPS.map(s=>`
+      <label class="plan-item${st[s.id]?' done':''}">
+        <input type="checkbox" data-plan="${s.id}" ${st[s.id]?'checked':''}>
+        <span class="plan-text"><span class="plan-when">${s.when}</span><br>${s.text}</span>
+      </label>
+    `).join('');
+    el.querySelectorAll('[data-plan]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const st2 = loadPlanState();
+        st2[cb.getAttribute('data-plan')] = cb.checked;
+        savePlanState(st2);
+        renderPlan();
+      });
+    });
+  }
+
+  document.getElementById('plan-head').addEventListener('click', (e)=>{
+    if(e.target.closest('input')) return;
+    const sec = document.getElementById('plan-section');
+    const body = document.getElementById('plan-body');
+    sec.classList.toggle('open');
+    body.style.display = sec.classList.contains('open') ? 'block' : 'none';
+  });
+
+  document.getElementById('exp-head').addEventListener('click', ()=>{
+    const sec = document.getElementById('exp-section');
+    const body = document.getElementById('exp-body');
+    sec.classList.toggle('open');
+    body.style.display = sec.classList.contains('open') ? 'block' : 'none';
+  });
+
+  document.getElementById('tt-head').addEventListener('click', ()=>{
+    const sec = document.getElementById('tt-section');
+    const body = document.getElementById('tt-body');
+    sec.classList.toggle('open');
+    body.style.display = sec.classList.contains('open') ? 'block' : 'none';
+  });
+
   load();
-  renderYearlyChart('fio');
+  renderYearlyChart('total');
+  renderPlan();
 })();
 </script>
 </body>
