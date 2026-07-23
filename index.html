@@ -2,696 +2,1346 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<title>Výdaje — Chata Novinsko</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Portfolio – investiční přehled</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
   :root{
-    --navy: #1A2330;
-    --panel: #212C3B;
-    --panel-2: #263243;
-    --grid-line: rgba(233,236,239,0.055);
-    --chalk: #E9ECEF;
-    --concrete: #8B94A3;
-    --amber: #D08C3E;
-    --teal: #6FA8A0;
-    --blue: #7C93B3;
-    --rust: #C0524A;
-    --line: rgba(233,236,239,0.12);
+    --bg:#12151c;
+    --panel:#1a1f29;
+    --panel-2:#1f2530;
+    --border:#2a3040;
+    --text:#e8e6de;
+    --muted:#8b93a5;
+    --gold:#c9a961;
+    --gold-dim:#8f7c4d;
+    --green:#5cb894;
+    --red:#cf5b4e;
+    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   }
-
-  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  html{ -webkit-text-size-adjust: 100%; }
-
+  *{box-sizing:border-box;}
+  html,body{background:var(--bg);margin:0;padding:0;}
   body{
-    margin:0;
-    background:
-      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0/32px 32px,
-      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0/32px 32px,
-      var(--navy);
-    color: var(--chalk);
-    font-family: 'Space Grotesk', system-ui, sans-serif;
-    min-height: 100vh;
-    padding: 20px 14px calc(60px + env(safe-area-inset-bottom));
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
   }
+  #app{
+    background:var(--bg);
+    color:var(--text);
+    min-height:100%;
+    padding:28px 20px 60px;
+    line-height:1.4;
+  }
+  .wrap{max-width:1040px;margin:0 auto;}
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:4px;
+  }
+  h1{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:32px;
+    margin:0 0 18px;
+    color:var(--text);
+    letter-spacing:.2px;
+  }
+  .rule{height:1px;background:linear-gradient(90deg,var(--gold-dim),transparent 70%);margin-bottom:26px;}
 
-  .wrap{ max-width: 880px; margin: 0 auto; }
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--border);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:28px;
+  }
+  .card{background:var(--panel);padding:16px 18px;}
+  .card .label{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .card .value{font-family:var(--serif);font-size:22px;color:var(--text);}
+  .card .value.pos{color:var(--green);}
+  .card .value.neg{color:var(--red);}
+  .card .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:4px;}
 
-  /* Sync bar */
-  .syncbar{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    border: 1px solid var(--line); background: var(--panel);
-    padding: 10px 14px; margin-bottom: 14px; font-family:'IBM Plex Mono', monospace;
-    font-size: 11.5px; color: var(--concrete); flex-wrap: wrap;
+  .platform-block{margin-bottom:30px;}
+  .platform-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding-bottom:8px;margin-bottom:2px;border-bottom:1px solid var(--border);
+    cursor:pointer;user-select:none;
   }
-  .syncbar-status{ display:flex; align-items:center; gap:8px; }
-  .sync-dot{ width:7px; height:7px; border-radius:50%; background: var(--concrete); flex-shrink:0; }
-  .sync-dot.on{ background: var(--teal); }
-  .sync-dot.busy{ background: var(--amber); animation: pulse 1s infinite ease-in-out; }
-  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-  .syncbar button{
-    background: var(--panel-2); border: 1px solid var(--line); color: var(--chalk);
-    font-family:'Space Grotesk',sans-serif; font-size: 12px; padding: 7px 12px;
-    cursor: pointer; border-radius: 2px;
-  }
-  .syncbar button:hover{ border-color: var(--amber); }
-  .syncbar-settings{
-    width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);
-    display: none; gap: 8px; flex-direction: column;
-  }
-  .syncbar-settings.open{ display:flex; }
-  .syncbar-settings input{
-    background: var(--panel-2); border: 1px solid var(--line); color: var(--chalk);
-    padding: 9px 10px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; outline:none;
-  }
-  .syncbar-settings input:focus{ border-color: var(--amber); }
-  .syncbar-help{ font-size: 11px; line-height: 1.5; color: var(--concrete); }
-  .syncbar-help a{ color: var(--amber); }
+  .platform-head:hover h2{color:var(--gold);}
+  .pf-chevron{display:inline-block;transition:transform .18s;color:var(--gold-dim);font-size:12px;margin-right:8px;transform:rotate(-90deg);}
+  .platform-block.open .pf-chevron, #tt-section.open .pf-chevron, #exp-section.open .pf-chevron, #plan-section.open .pf-chevron{transform:rotate(0deg);}
+  .pf-body{display:none;}
+  .platform-block.open .pf-body{display:block;}
+  .platform-head h2{font-family:var(--serif);font-weight:400;font-size:19px;margin:0;color:var(--gold);}
+  .platform-head .pf-total{font-family:var(--mono);font-size:12.5px;color:var(--muted);}
 
-  /* Title block */
-  .titleblock{
-    border: 1px solid var(--line);
-    background: var(--panel);
-    margin-bottom: 16px;
-    overflow: hidden;
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:right;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);font-weight:400;
+    padding:10px 8px 6px;border-bottom:1px solid var(--border);
   }
-  .titleblock-top{
-    display:flex; justify-content: space-between; align-items: flex-start;
-    padding: 16px 18px 12px;
-    border-bottom: 1px solid var(--line);
+  thead th:first-child, thead th:nth-child(2){text-align:left;}
+  tbody td{
+    padding:9px 8px;font-family:var(--mono);font-size:13px;text-align:right;
+    border-bottom:1px solid #212736;
+    color:var(--text);
   }
-  .tb-eyebrow{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--concrete);
+  tbody td:first-child{text-align:left;font-family:var(--sans);font-size:13.5px;color:var(--text);}
+  tbody td:nth-child(2){text-align:left;color:var(--muted);font-size:12px;}
+  tbody tr:hover{background:var(--panel-2);}
+  .sym{font-weight:600;letter-spacing:.2px;color:var(--text);}
+  .pos{color:var(--green) !important;}
+  .neg{color:var(--red) !important;}
+  .editable{
+    background:#0f1319;border:1px solid var(--border);color:var(--text);
+    font-family:var(--mono);font-size:13px;text-align:right;width:78px;border-radius:4px;padding:3px 5px;
   }
-  .tb-title{ font-size: 20px; font-weight: 700; margin-top: 4px; }
-  .tb-sheet{ text-align:right; font-family:'IBM Plex Mono', monospace; font-size: 11px; color: var(--concrete); }
-  .tb-sheet b{ color: var(--chalk); font-size: 13px; }
+  .editable:hover{border-color:var(--gold-dim);}
+  .editable:focus{outline:none;border-color:var(--gold-dim);background:#0f1319;}
+  .del-btn{
+    background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;
+    padding:2px 6px;border-radius:4px;
+  }
+  .del-btn:hover{color:var(--red);background:#241a1a;}
 
-  .titleblock-stats{
-    display:grid; grid-template-columns: repeat(3,1fr);
+  .panel-toggle{
+    display:flex;gap:10px;margin:28px 0 16px;
   }
-  .stat{ padding: 14px 16px; border-right: 1px solid var(--line); min-width:0; }
-  .stat:last-child{ border-right: none; }
-  .stat-label{ font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--concrete); font-family:'IBM Plex Mono', monospace;}
-  .stat-value{ font-family:'IBM Plex Mono', monospace; font-size: 19px; font-weight: 600; margin-top: 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .stat-value.over{ color: var(--rust); }
-  .stat-value.under{ color: var(--teal); }
-  .budget-edit{
-    background: transparent; border: none; border-bottom: 1px dashed var(--line);
-    color: var(--concrete); font-family:'IBM Plex Mono', monospace; font-size: 16px;
-    padding: 4px 0; width: 100%; margin-top: 6px; outline: none;
+  .btn{
+    font-family:var(--sans);font-size:13px;background:var(--panel);color:var(--text);
+    border:1px solid var(--border);padding:9px 16px;border-radius:7px;cursor:pointer;
   }
-  .budget-edit:focus{ border-bottom-color: var(--amber); color: var(--chalk); }
+  .btn:hover{border-color:var(--gold-dim);}
+  .btn.primary{background:var(--gold-dim);border-color:var(--gold-dim);color:#12151c;font-weight:600;}
+  .btn.primary:hover{background:var(--gold);}
 
-  @media (max-width: 560px){
-    .titleblock-stats{ grid-template-columns: 1fr; }
-    .stat{ border-right: none; border-bottom: 1px solid var(--line); }
-    .stat:last-child{ border-bottom: none; }
-    .stat-value{ font-size: 22px; }
+  .form-panel{
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:18px 20px;margin-bottom:20px;display:none;
   }
-
-  /* Chart row */
-  .chartrow{
-    border: 1px solid var(--line); background: var(--panel);
-    padding: 14px 16px; margin-bottom: 16px;
+  .form-panel.open{display:block;}
+  .form-panel h3{font-family:var(--serif);font-weight:400;font-size:16px;margin:0 0 14px;color:var(--gold);}
+  .form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .form-row input, .form-row textarea, .form-row select{
+    background:#0f1319;border:1px solid var(--border);color:var(--text);
+    padding:8px 10px;border-radius:6px;font-family:var(--sans);font-size:13px;
   }
-  .chartrow-label{ font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--concrete); font-family:'IBM Plex Mono', monospace; margin-bottom: 12px;}
-  .bar-row{ display:flex; align-items:center; gap: 10px; margin-bottom: 9px; font-size: 12.5px;}
-  .bar-name{ width: 120px; flex-shrink:0; color: var(--concrete); font-family:'IBM Plex Mono', monospace; font-size: 11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .bar-track{ flex:1; height: 8px; background: var(--panel-2); position: relative; }
-  .bar-fill{ height: 100%; }
-  .bar-amount{ width: 84px; text-align:right; flex-shrink:0; font-family:'IBM Plex Mono', monospace; font-size: 11.5px;}
-  @media (max-width: 480px){ .bar-name{ width: 78px; } }
-
-  /* Add form */
-  .addform{
-    border: 1px solid var(--line); background: var(--panel);
-    padding: 14px 16px; margin-bottom: 16px;
+  .form-row input{flex:1;min-width:110px;}
+  .form-row textarea{width:100%;min-height:120px;font-family:var(--mono);font-size:11.5px;resize:vertical;color:var(--text);background:#0f1319;}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:2px;margin-bottom:10px;}
+  .empty{color:var(--muted);font-size:13px;padding:20px 0;text-align:center;font-family:var(--sans);}
+  .toast{
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+    background:var(--panel);border:1px solid var(--gold-dim);color:var(--text);
+    padding:9px 16px;border-radius:7px;font-size:12.5px;opacity:0;transition:opacity .25s;
+    pointer-events:none;font-family:var(--sans);
   }
-  .addform-label{ font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--concrete); font-family:'IBM Plex Mono', monospace; margin-bottom: 12px;}
-  .addform-grid{
-    display:grid; grid-template-columns: 148px 150px 1fr 130px auto;
-    gap: 10px; align-items:end;
+  .toast.show{opacity:1;}
+  .yearly-section{margin:38px 0 30px;}
+  .yearly-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .yearly-head h2{font-family:var(--serif);font-weight:400;font-size:19px;margin:0;color:var(--gold);}
+  .tabs{display:flex;gap:6px;}
+  .tab-btn{
+    font-family:var(--sans);font-size:12.5px;background:var(--panel);color:var(--muted);
+    border:1px solid var(--border);padding:6px 12px;border-radius:20px;cursor:pointer;
   }
-  @media (max-width: 700px){
-    .addform-grid{ grid-template-columns: 1fr 1fr; }
-    .field-desc{ grid-column: 1 / -1; }
-    .btn-add{ grid-column: 1 / -1; }
+  .tab-btn.active{background:var(--gold-dim);border-color:var(--gold-dim);color:#12151c;font-weight:600;}
+  .chart-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 14px 8px;}
+  .chart-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;}
+  .chart-legend{display:flex;gap:16px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:6px;}
+  .legend-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+  .tt-group{margin-bottom:2px;}
+  .tt-group-head{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--sans);font-size:13px;color:var(--text);padding:4px 2px 8px;font-weight:600;}
+  .tt-sum{font-family:var(--mono);font-size:13px;}
+  .tt-divider{height:2px;background:var(--gold-dim);margin:8px 0 16px;border-radius:2px;}
+  .tt-group table{width:100%;border-collapse:collapse;}
+  .tt-group td{padding:7px 4px;font-family:var(--mono);font-size:12.5px;border-bottom:1px solid #212736;color:var(--text);text-align:right;}
+  .tt-group td:first-child{text-align:left;font-family:var(--sans);font-weight:600;}
+  .tt-group td:nth-child(2){text-align:left;color:var(--muted);font-family:var(--sans);font-size:11px;}
+  .tt-empty{text-align:center;color:var(--muted);padding:14px 0;font-family:var(--sans);font-size:12.5px;}
+  /* --- Mobilní optimalizace --- */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  @media (max-width: 640px){
+    #app{padding:16px 10px 40px;}
+    h1{font-size:24px;margin-bottom:12px;}
+    .summary{grid-template-columns:repeat(2,1fr);}
+    .card{padding:12px 12px;}
+    .card .value{font-size:17px;}
+    .panel-toggle{flex-wrap:wrap;}
+    .btn{padding:9px 13px;font-size:12.5px;flex:1;min-width:130px;}
+    .form-row{flex-direction:column;}
+    .form-row input, .form-row select{width:100%;min-width:0;}
+    thead th{padding:8px 5px 5px;font-size:9px;}
+    tbody td{padding:8px 5px;font-size:12px;}
+    tbody td:first-child{font-size:12.5px;}
+    .editable{width:62px;font-size:12px;padding:3px 3px;}
+    .platform-head h2{font-size:16.5px;}
+    .platform-head .pf-total{font-size:11px;}
+    .yearly-head{flex-direction:column;align-items:flex-start;}
+    .tabs{flex-wrap:wrap;}
+    .tab-btn{padding:6px 10px;font-size:12px;}
+    .tt-group td{padding:6px 3px;font-size:11.5px;}
+    .tt-group td:nth-child(2){display:none;} /* na mobilu skryjeme sloupec platformy */
+    .chart-box{padding:12px 8px 6px;}
+    .del-btn{padding:2px 4px;font-size:14px;}
   }
-  .field{ display:flex; flex-direction:column; gap:5px; min-width:0; }
-  .field label{ font-size: 10px; color: var(--concrete); font-family:'IBM Plex Mono', monospace; letter-spacing:0.05em;}
-  .field input, .field select{
-    box-sizing: border-box;
-    height: 46px;
-    background: var(--panel-2); border: 1px solid var(--line); color: var(--chalk);
-    padding: 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: 16px; outline: none;
-    -webkit-appearance: none; appearance: none; border-radius: 0;
+  @media (max-width: 400px){
+    .summary{grid-template-columns:1fr 1fr;}
+    .card .value{font-size:15px;}
+    tbody td{font-size:11px;}
+    .editable{width:54px;}
   }
-  .field input[type="date"]{
-    color-scheme: dark;
-    padding-right: 6px;
+  .exp-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+  .exp-label{flex:0 0 150px;font-family:var(--sans);font-size:12.5px;color:var(--text);}
+  .exp-bar-wrap{flex:1;background:#0f1319;border-radius:4px;height:18px;overflow:hidden;}
+  .exp-bar{height:100%;border-radius:4px;background:var(--gold-dim);}
+  .exp-val{flex:0 0 150px;font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:right;}
+  .exp-subhead{font-family:var(--serif);font-size:15px;color:var(--gold);margin:16px 0 10px;}
+  .exp-subhead:first-child{margin-top:0;}
+  @media (max-width:640px){
+    .exp-label{flex-basis:95px;font-size:11px;}
+    .exp-val{flex-basis:110px;font-size:10px;}
   }
-  .field input:focus, .field select:focus{ border-color: var(--amber); }
-  .btn-add{
-    box-sizing: border-box;
-    height: 46px;
-    background: var(--amber); color: var(--navy); border: none; font-weight: 700;
-    padding: 0 18px; cursor: pointer; font-size: 14.5px; font-family:'Space Grotesk',sans-serif;
-    white-space: nowrap; transition: filter 0.15s;
-  }
-  .btn-add:hover{ filter: brightness(1.1); }
-  .btn-add:active{ filter: brightness(0.95); }
-
-  /* Ledger */
-  .ledger{ border: 1px solid var(--line); background: var(--panel); }
-  .cat-group{ border-bottom: 1px solid var(--line); }
-  .cat-group:last-child{ border-bottom: none; }
-  .cat-head{
-    display:flex; justify-content: space-between; align-items:center;
-    padding: 10px 16px; background: var(--panel-2);
-  }
-  .cat-name{ display:flex; align-items:center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; }
-  .cat-dot{ width: 8px; height: 8px; border-radius: 50%; flex-shrink:0; }
-  .cat-subtotal{ font-family:'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--concrete); }
-
-  .item-row{
-    display:grid; grid-template-columns: 26px 84px 1fr 100px 34px;
-    align-items:center; gap: 8px; padding: 11px 16px;
-    border-top: 1px solid var(--grid-line);
-    font-size: 13.5px;
-  }
-  .item-num{ font-family:'IBM Plex Mono', monospace; color: var(--concrete); font-size: 11px; }
-  .item-date{ font-family:'IBM Plex Mono', monospace; color: var(--concrete); font-size: 11.5px; }
-  .item-desc{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .item-amount{ font-family:'IBM Plex Mono', monospace; text-align: right; font-size: 13.5px; }
-  .item-del{
-    background: none; border: none; color: var(--concrete); cursor: pointer;
-    font-size: 20px; line-height: 1; padding: 6px; opacity: 0.5; transition: opacity 0.15s, color 0.15s;
-    min-width: 34px; min-height: 34px;
-  }
-  .item-del:hover, .item-del:active{ opacity: 1; color: var(--rust); }
-
-  @media (max-width: 520px){
-    .item-row{
-      grid-template-columns: 1fr 34px;
-      grid-template-rows: auto auto auto;
-      grid-template-areas:
-        "date   del"
-        "desc   del"
-        "amount del";
-      row-gap: 3px;
-      column-gap: 8px;
-      padding: 12px 14px;
-    }
-    .item-num{ display:none; }
-    .item-date{ grid-area: date; }
-    .item-desc{ grid-area: desc; white-space: normal; line-height: 1.3; }
-    .item-amount{ grid-area: amount; text-align:left; color: var(--concrete); font-size: 12.5px; }
-    .item-del{ grid-area: del; align-self: center; justify-self: end; }
-  }
-
-  .empty{
-    padding: 36px 16px; text-align:center; color: var(--concrete); font-family:'IBM Plex Mono', monospace; font-size: 13px;
-  }
-
-  .footer-note{
-    text-align:center; color: var(--concrete); font-size: 11px; font-family:'IBM Plex Mono', monospace;
-    margin-top: 16px; letter-spacing: 0.03em;
-  }
-
-  ::selection{ background: var(--amber); color: var(--navy); }
+  .plan-item{display:flex;align-items:flex-start;gap:10px;padding:9px 4px;border-bottom:1px solid #212736;cursor:pointer;}
+  .plan-item:last-child{border-bottom:none;}
+  .plan-item input[type=checkbox]{margin-top:3px;accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;cursor:pointer;}
+  .plan-item .plan-text{font-family:var(--sans);font-size:13px;color:var(--text);line-height:1.45;}
+  .plan-item .plan-when{font-family:var(--mono);font-size:10.5px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:.06em;}
+  .plan-item.done .plan-text{color:var(--muted);text-decoration:line-through;}
+  .plan-progress{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:10px;}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="app">
+  <div class="wrap">
+    <div class="eyebrow">Investiční přehled</div>
+    <h1>Portfolio</h1>
+    <div class="rule"></div>
 
-  <div class="syncbar">
-    <div class="syncbar-status">
-      <span class="sync-dot" id="syncDot"></span>
-      <span id="syncText">Google Disk: nepřipojeno</span>
+    <div class="summary" id="summary"></div>
+
+    <div class="panel-toggle">
+      <button class="btn primary" id="btn-add">+ Přidat pozici</button>
+      <button class="btn" id="btn-import">Vložit výpis</button>
+      <button class="btn" id="btn-privacy" title="Zobrazit/skrýt částky">👁 Zobrazit částky</button>
+      <button class="btn" id="btn-fx" title="Stáhne aktuální kurzy USD/EUR/GBP → CZK (data ECB)">↻ Kurzy</button>
+      <select id="sort-select" class="btn" style="cursor:pointer;">
+        <option value="default">Řazení: výchozí</option>
+        <option value="plDesc">Zisk Kč: nejvyšší</option>
+        <option value="plAsc">Zisk Kč: nejnižší</option>
+        <option value="pctDesc">%: nejvyšší</option>
+        <option value="pctAsc">%: nejnižší</option>
+        <option value="valDesc">Hodnota: nejvyšší</option>
+      </select>
     </div>
-    <div>
-      <button id="btnSyncToggle">Nastavit</button>
-      <button id="btnSyncConnect" style="display:none;">Připojit</button>
-    </div>
-    <div class="syncbar-settings" id="syncSettings">
-      <div class="syncbar-help">
-        Pro ukládání na Google Disk potřebuješ vlastní OAuth Client ID z
-        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console</a>
-        (typ „Web application“, do „Authorized JavaScript origins“ přidej adresu, na které je tato stránka nahraná).
-        Data se ukládají jako soubor <code>chata-novinsko-vydaje.json</code> na tvém Disku a app má přístup jen k souborům, které sama vytvoří.
+
+    <div class="form-panel" id="panel-add">
+      <h3>Přidat pozici ručně</h3>
+      <div class="form-row">
+        <input id="f-platform" placeholder="Platforma (např. XTB, Degiro, Trading212)">
+        <input id="f-symbol" placeholder="Symbol (např. AAPL.US)">
+        <input id="f-qty" placeholder="Množství" type="number" step="any">
       </div>
-      <input type="text" id="clientIdInput" placeholder="Google OAuth Client ID (např. xxxx.apps.googleusercontent.com)">
+      <div class="form-row">
+        <input id="f-buy" placeholder="Nákupní cena (za kus)" type="number" step="any">
+        <input id="f-cur" placeholder="Aktuální cena (za kus)" type="number" step="any">
+        <input id="f-ccy" placeholder="Měna (USD, EUR, CZK...)">
+        <input id="f-fx" placeholder="Kurz na CZK (1 pokud v CZK)" type="number" step="any">
+      </div>
+      <div class="form-row">
+        <input id="f-date" placeholder="Datum nákupu" type="date">
+      </div>
+      <button class="btn primary" id="f-submit">Uložit pozici</button>
+    </div>
+
+    <div class="form-panel" id="panel-import">
+      <h3>Vložit výpis z brokera</h3>
+      <div class="form-row">
+        <select id="i-format">
+          <option value="xtb">XTB – Otevřené pozice</option>
+          <option value="fio">Fio – Vývoj pozice na CP</option>
+          <option value="csv" selected>Vlastní seznam (víc platforem najednou)</option>
+        </select>
+        <input id="i-platform" placeholder="Název platformy" value="XTB">
+      </div>
+      <div class="form-row">
+        <textarea id="i-text" placeholder="Sem vlož text výpisu...">Portu - První portfolio;XMK9 GY;X-TRACKERS MSCI Japan EUR Hedged UCITS ETF;EUR;9.4951;37.623;60.73;24.26
+Portu - První portfolio;CSPX LN;iShares Core S&P 500 UCITS ETF;USD;3.993;590.633;805.54;21.287
+Portu - První portfolio;IS3N GY;iShares Core MSCI EM IMI UCITS ETF;EUR;13.3412;31.292;48.8;24.26
+Portu - První portfolio;ZPRS GY;SPDR MSCI World Small Cap UCITS;EUR;8.3825;96.958;130.02;24.26
+Portu - První portfolio;SXR7 GY;iShares Core MSCI EMU UCITS ETF;EUR;4.6699;182.572;246.8;24.26
+Portu - První portfolio;3SUD GY;iShares J.P. Morgan USD EM Bond UCITS ETF;EUR;70.5105;4.769;5.33;24.26
+Portu - První portfolio;LQDA LN;iShares USD Corp Bond UCITS ETF;USD;46.7076;5.900;6.37;21.287
+Portu - První portfolio;DPYE LN;iShares Developed Markets Property Yield UCITS ETF;EUR;105.0358;5.631;6.44;24.26
+Portu - První portfolio;DTLA LN;iShares USD Treasury Bond 20+y UCITS ETF;USD;152.0993;4.537;4.68;21.287
+Portu - První portfolio;IGIL LN;iShares Global Inflation Linked Govt Bond UCITS ETF;USD;2.0782;157.512;165.46;21.287
+Portu - Technologický pokrok;SBIO LN;Invesco NASDAQ Biotech UCITS ETF;USD;10.0095;46.655;68.81;21.287
+Portu - Technologický pokrok;IUIT LN;iShares S&P 500 Information Technology Sector UCITS ETF;USD;23.311;33.328;49.8;21.287
+Portu - Technologický pokrok;USPY LN;L&G Cyber Security UCITS ETF;USD;24.661;28.415;44.28;21.287
+Portu - Technologický pokrok;2B76 GY;iShares Automation & Robotics UCITS ETF;EUR;68.8321;12.690;19.15;24.26
+Portu - Technologický pokrok;IEVD GY;iShares Electric Vehicles and Driving Technology UCITS ETF;EUR;57.2481;6.933;12.07;24.26
+Portu - Technologický pokrok;DRUP GY;Amundi MSCI Disruptive Technology UCITS ETF Acc;EUR;43.3367;14.121;19.59;24.26
+Portu - První portfolio;Hotovost;Hotovost CZK;CZK;4112.41;1;1;1
+Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1</textarea>
+      </div>
+      <div class="hint">XTB / Fio formáty: přesně formát z výpisů brokera. Vlastní seznam: řádky ve tvaru Platforma;Symbol;Instrument;Měna;Množství;NákupníCena;AktuálníCena;Kurz na CZK — hodí se pro víc platforem/portfolií najednou (např. Portu). Import nahradí pozice u dotčených platforem.</div>
+      <button class="btn primary" id="i-submit">Zpracovat výpis</button>
+    </div>
+
+    <div id="holdings"></div>
+
+    <div class="yearly-section" id="plan-section">
+      <div class="yearly-head" id="plan-head" style="cursor:pointer;user-select:none;">
+        <h2><span class="pf-chevron">▼</span>Plán výběru 500 tis. (stavba, do 3/2027)</h2>
+        <div class="tt-sum" id="plan-summary"></div>
+      </div>
+      <div class="chart-box" id="plan-body" style="display:none;">
+        <div class="plan-progress" id="plan-progress"></div>
+        <div id="plan-items"></div>
+        <div class="chart-note">Zdroje: Fio ~205 tis. + Moneta ~238 tis. (vrstvy 3+ roky staré k datu prodeje, konzervativní odhad — reálně spíš víc, starší kusy nejvíc vyrostly) + ~40 tis. přesměrovaná měsíční investice = ~484 tis. Rezerva: ČEZ 2024 (~24 tis., daň ~900 Kč). Portu DCA běží dál beze změny.</div>
+      </div>
+    </div>
+
+    <div class="yearly-section" id="exp-section">
+      <div class="yearly-head" id="exp-head" style="cursor:pointer;user-select:none;">
+        <h2><span class="pf-chevron">▼</span>Přesahy a skutečná expozice</h2>
+        <div class="tt-sum" id="exp-summary"></div>
+      </div>
+      <div class="chart-box" id="exp-body" style="display:none;">
+        <div id="exp-content"></div>
+        <div class="chart-note">Podíly uvnitř ETF a fondů jsou odhady na základě typického složení (např. VWCE ~62 % USA, ~20 % velká tech sedmička; CSPX 100 % USA). Přesná čísla se v čase mění podle vah v indexech.</div>
+      </div>
+    </div>
+
+    <div class="yearly-section" id="tt-section">
+      <div class="yearly-head" id="tt-head" style="cursor:pointer;user-select:none;">
+        <h2><span class="pf-chevron">▼</span>Časový test (3 roky)</h2>
+        <div class="tt-sum" id="tt-summary"></div>
+      </div>
+      <div class="chart-box" id="tt-body" style="display:none;">
+        <div class="tt-group" id="tt-passed"></div>
+        <div class="tt-divider"></div>
+        <div class="tt-group" id="tt-pending"></div>
+        <div class="chart-note">Časový test = 3 roky od prvního nákupu (u dokupovaných pozic se posuzuje každý nákup zvlášť — zde zjednodušeně podle nejstaršího nákupu, u dokupů část pozice ještě testem projít nemusela). Hotovost se nezapočítává.</div>
+      </div>
+    </div>
+
+    <div class="yearly-section">
+      <div class="yearly-head">
+        <h2>Roční výnosy</h2>
+        <div class="tabs" id="yearly-tabs">
+          <button class="tab-btn active" data-tab="total">Celkem</button>
+          <button class="tab-btn" data-tab="fio">Fio</button>
+          <button class="tab-btn" data-tab="portu">Portu</button>
+          <button class="tab-btn" data-tab="moneta">Moneta</button>
+          <button class="tab-btn" data-tab="xtb">XTB</button>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div id="yearly-legend" class="chart-legend"></div>
+        <div id="yearly-chart"></div>
+        <div id="yearly-note" class="chart-note"></div>
+      </div>
     </div>
   </div>
-
-  <div class="titleblock">
-    <div class="titleblock-top">
-      <div>
-        <div class="tb-eyebrow">Evidence nákladů</div>
-        <div class="tb-title">Chata Novinsko</div>
-      </div>
-      <div class="tb-sheet">List <b>01</b></div>
-    </div>
-    <div class="titleblock-stats">
-      <div class="stat">
-        <div class="stat-label">Celkem utraceno</div>
-        <div class="stat-value" id="statTotal">0 Kč</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Počet položek</div>
-        <div class="stat-value" id="statCount">0</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Rozpočet</div>
-        <div class="stat-value" id="statBudget">—</div>
-        <input class="budget-edit" id="budgetInput" type="number" inputmode="numeric" placeholder="zadat rozpočet v Kč...">
-      </div>
-    </div>
-  </div>
-
-  <div class="chartrow" id="chartRow" style="display:none;">
-    <div class="chartrow-label">Rozložení podle kategorie</div>
-    <div id="chartBars"></div>
-  </div>
-
-  <div class="addform">
-    <div class="addform-label">Přidat výdaj</div>
-    <div class="addform-grid">
-      <div class="field">
-        <label for="inDate">Datum</label>
-        <input type="date" id="inDate">
-      </div>
-      <div class="field">
-        <label for="inCat">Kategorie</label>
-        <select id="inCat"></select>
-      </div>
-      <div class="field field-desc">
-        <label for="inDesc">Popis</label>
-        <input type="text" id="inDesc" placeholder="např. cihly Porotherm 30 P+D">
-      </div>
-      <div class="field">
-        <label for="inAmount">Částka (Kč)</label>
-        <input type="number" inputmode="decimal" id="inAmount" placeholder="0">
-      </div>
-      <button class="btn-add" id="btnAdd">+ Přidat</button>
-    </div>
-  </div>
-
-  <div class="ledger" id="ledger">
-    <div class="empty">Zatím žádné výdaje. Přidejte první položku výše.</div>
-  </div>
-
-  <div class="footer-note" id="footerNote">ukládá se automaticky · pouze u vás</div>
+  <div class="toast" id="toast"></div>
 </div>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-let CATS = [
-  { id:'material', name:'Materiál',         color:'#D08C3E' },
-  { id:'prace',    name:'Práce / řemeslníci', color:'#6FA8A0' },
-  { id:'projekt',  name:'Projekt / povolení', color:'#7C93B3' },
-  { id:'technika', name:'Technika / nářadí',  color:'#C0524A' },
-  { id:'site',     name:'Sítě',              color:'#5B93A8' },
-  { id:'exekuce',  name:'Exekuce',           color:'#8E7CC3' },
-  { id:'ostatni',  name:'Ostatní',           color:'#8B94A3' },
-];
+(function(){
+  const XTB_SEED = `1 1385996742 MSFT.US XOFF 0.4705 16.07.2024 15:30:03 454.3600 410.5400 193.15907 -9.64% Cash Stocks 24.1940000000 0.00 0.00 0.00 -416.02
+2 1385997469 AAPL.US XOFF 0.0933 16.07.2024 15:30:03 235.1800 241.4600 22.528218 2.67% Cash Stocks 24.1940000000 0.00 0.00 0.00 21.54
+3 1385997528 TSLA.US XOFF 0.0137 16.07.2024 15:30:03 255.4400 355.8000 4.87446 39.29% Cash Stocks 24.1940000000 0.00 0.00 0.00 33.91
+4 1385998261 GOOGL.US XOFF 0.2905 16.07.2024 15:30:03 187.4200 186.0900 54.059145 -0.71% Cash Stocks 24.1940000000 0.00 0.00 0.00 9.71
+5 1386003241 AAPL.US XOFF 1.0000 16.07.2024 15:30:54 235.1000 241.4600 241.46 2.71% Cash Stocks 24.1940000000 0.00 0.00 0.00 233.26
+6 1386004370 GOOGL.US XOFF 2.0000 16.07.2024 15:31:06 187.4600 186.0900 372.18 -0.73% Cash Stocks 24.1940000000 0.00 0.00 0.00 65.70
+7 1386004968 TSLA.US XOFF 1.0000 16.07.2024 15:31:12 256.1200 355.8000 355.8 38.92% Cash Stocks 24.1940000000 0.00 0.00 0.00 2459.63
+8 1392730666 JPM.US XOFF 0.0171 22.07.2024 17:25:18 210.6500 276.2000 4.72302 31.12% Cash Stocks 24.1940000000 0.00 0.00 0.00 28.23
+9 1392730779 JPM.US XOFF 1.0000 22.07.2024 17:25:19 210.6300 276.2000 276.2 31.13% Cash Stocks 24.1940000000 0.00 0.00 0.00 1651.46
+10 1392740510 GRMN.US XOFF 0.2418 22.07.2024 17:29:55 172.5600 209.6500 50.69337 21.49% Cash Stocks 24.1940000000 0.00 0.00 0.00 231.72
+11 1392740627 GRMN.US XOFF 1.0000 22.07.2024 17:29:57 172.5000 209.6500 209.65 21.54% Cash Stocks 24.1940000000 0.00 0.00 0.00 959.70
+12 1392744102 MMM.US XOFF 0.0610 22.07.2024 17:31:33 103.9500 148.6100 9.06521 42.96% Cash Stocks 24.1940000000 0.00 0.00 0.00 67.54
+13 1392744117 MMM.US XOFF 2.0000 22.07.2024 17:31:34 103.9600 148.6100 297.22 42.95% Cash Stocks 24.1940000000 0.00 0.00 0.00 2214.26
+14 1397485326 JNJ.US XOFF 0.3305 25.07.2024 18:35:14 159.8900 157.2000 51.9546 -1.68% Cash Stocks 24.1940000000 0.00 0.00 0.00 -6.77
+15 1397485336 JNJ.US XOFF 1.0000 25.07.2024 18:35:15 159.8700 157.2000 157.2 -1.67% Cash Stocks 24.1940000000 0.00 0.00 0.00 -19.99
+16 1412201169 AAPL.US XOFF 0.4105 06.08.2024 15:30:03 209.1300 241.4600 99.11933 15.46% Cash Stocks 24.1940000000 0.00 0.00 0.00 358.64
+17 1412540339 GOOGL.US XOFF 0.5402 06.08.2024 16:58:35 159.2600 186.0900 100.525818 16.85% Cash Stocks 24.1940000000 0.00 0.00 0.00 390.28
+18 1414193057 QQQ.US XTB 2.0000 07.08.2024 16:13:13 448.8100 535.1000 1070.2 19.23% Equities CFD 23.9120000000 0.00 -1043.06 0.00 4126.73
+19 1414198031 MSFT.US XOFF 0.2097 07.08.2024 16:15:26 410.0500 410.5400 86.090238 0.12% Cash Stocks 24.1940000000 0.00 0.00 0.00 46.98
+20 1414198481 TSLA.US XOFF 0.4316 07.08.2024 16:15:38 199.2100 355.8000 153.56328 78.61% Cash Stocks 24.1940000000 0.00 0.00 0.00 1651.42
+21 1484244985 VWCE.DE XETA 0.6859 07.10.2024 09:11:50 127.2200 138.7400 95.161766 9.06% Cash Stocks 24.9910000000 0.00 0.00 0.00 146.77
+22 1484244993 VWCE.DE XETA 10.0000 07.10.2024 09:11:51 127.2200 138.7400 1387.4 9.06% Cash Stocks 24.9910000000 0.00 0.00 0.00 2139.85
+23 1485038289 AGAS.NO MESI 4.0000 07.10.2024 16:00:50 117.8000 81.3000 325.2 -30.98% Cash Stocks 2.1402300000 0.00 0.00 0.00 -343.70
+24 1491114050 VWCE.DE XOFF 0.3042 11.10.2024 09:04:01 127.7200 138.7400 42.204708 8.63% Cash Stocks 24.9910000000 0.00 0.00 0.00 61.84
+25 1512242669 TTWO.US KNEM 0.3171 29.10.2024 14:30:03 160.6300 209.8500 66.543435 30.64% Cash Stocks 24.1940000000 0.00 0.00 0.00 376.44
+26 1512247453 TTWO.US KNEM 1.0000 29.10.2024 14:30:35 160.3900 209.8500 209.85 30.84% Cash Stocks 24.1940000000 0.00 0.00 0.00 1193.12
+27 1528486344 GOOGL.US XOFF 0.1785 08.11.2024 19:03:41 178.8600 186.0900 33.217065 4.04% Cash Stocks 24.1940000000 0.00 0.00 0.00 32.51
+28 1528486367 GOOGL.US XOFF 1.0000 08.11.2024 19:03:42 178.8600 186.0900 186.09 4.04% Cash Stocks 24.1940000000 0.00 0.00 0.00 182.10
+29 1529484060 VWCE.DE XOFF 0.2954 11.11.2024 09:04:26 131.9400 138.7400 40.983796 5.15% Cash Stocks 24.9910000000 0.00 0.00 0.00 30.91
+30 1530111658 SAP.DE HREU 2.0000 11.11.2024 14:48:32 223.5000 280.6500 561.3 25.57% Cash Stocks 24.9910000000 0.00 0.00 0.00 2604.28
+31 1547942350 BRYN.DE XOFF 0.0375 22.11.2024 14:23:24 453.7500 455.4500 17.079375 0.37% Cash Stocks 24.9910000000 0.00 0.00 0.00 -8.14
+32 1547942383 BRYN.DE XOFF 1.0000 22.11.2024 14:23:25 453.7000 455.4500 455.45 0.39% Cash Stocks 24.9910000000 0.00 0.00 0.00 -215.92
+33 1548088115 LLY.US XOFF 0.1362 22.11.2024 15:30:03 750.0100 871.8100 118.740522 16.24% Cash Stocks 24.1940000000 0.00 0.00 0.00 322.91
+34 1558393813 BRYN.DE XOFF 0.0285 02.12.2024 09:03:32 460.5000 455.4500 12.980325 -1.10% Cash Stocks 24.9910000000 0.00 0.00 0.00 -9.87
+35 1558438020 BRYN.DE XOFF 1.0000 02.12.2024 09:05:32 460.1500 455.4500 455.45 -1.02% Cash Stocks 24.9910000000 0.00 0.00 0.00 -338.90
+36 1569847167 ASO.US KNEM 0.2659 10.12.2024 15:30:03 50.5000 53.5000 14.22565 5.94% Cash Stocks 24.1940000000 0.00 0.00 0.00 16.51
+37 1569851340 ASO.US KNEM 8.0000 10.12.2024 15:30:24 50.5000 53.5000 428 5.94% Cash Stocks 24.1940000000 0.00 0.00 0.00 495.89
+38 1570920931 VWCE.DE XOFF 0.2884 11.12.2024 09:04:05 135.9800 138.7400 40.012616 2.03% Cash Stocks 24.9910000000 0.00 0.00 0.00 7.00
+39 1576726466 BRYN.DE EUCC 0.0433 16.12.2024 15:54:54 438.0000 455.4500 19.720985 3.98% Cash Stocks 24.9910000000 0.00 0.00 0.00 14.16
+40 1576726511 BRYN.DE EUCC 1.0000 16.12.2024 15:54:55 438.2000 455.4500 455.45 3.94% Cash Stocks 24.9910000000 0.00 0.00 0.00 322.00
+41 1578267558 TTWO.US KNEM 0.1088 17.12.2024 15:30:04 187.7200 209.8500 22.83168 11.79% Cash Stocks 24.1940000000 0.00 0.00 0.00 52.86
+42 1578267592 TTWO.US KNEM 0.1087 17.12.2024 15:30:04 187.7200 209.8500 22.810695 11.79% Cash Stocks 24.1940000000 0.00 0.00 0.00 52.81
+43 1578270377 TTWO.US KNEM 1.0000 17.12.2024 15:30:20 186.6400 209.8500 209.85 12.44% Cash Stocks 24.1940000000 0.00 0.00 0.00 511.15
+44 1578270512 TTWO.US KNEM 1.0000 17.12.2024 15:30:21 186.6400 209.8500 209.85 12.44% Cash Stocks 24.1940000000 0.00 0.00 0.00 511.15
+45 1581938602 TTWO.US KNEM 0.1320 19.12.2024 15:30:03 183.8800 209.8500 27.7002 14.12% Cash Stocks 24.1940000000 0.00 0.00 0.00 68.57
+46 1581940163 TSLA.US KNEM 0.0261 19.12.2024 15:30:03 452.7600 355.8000 9.28638 -21.42% Cash Stocks 24.1940000000 0.00 0.00 0.00 -66.47
+47 1581941813 TTWO.US KNEM 1.0000 19.12.2024 15:30:05 183.5000 209.8500 209.85 14.36% Cash Stocks 24.1940000000 0.00 0.00 0.00 528.87
+48 1581946031 TSLA.US KNEM 1.0000 19.12.2024 15:30:40 451.9900 355.8000 355.8 -21.28% Cash Stocks 24.1940000000 0.00 0.00 0.00 -2529.73
+49 1608122553 VWCE.DE XOFF 0.2934 13.01.2025 09:04:02 133.4800 138.7400 40.706316 3.94% Cash Stocks 24.9910000000 0.00 0.00 0.00 25.61
+50 1614555816 NVD.DE HREU 4.0000 16.01.2025 12:34:13 134.9800 129.9200 519.68 -3.75% Cash Stocks 24.9910000000 0.00 0.00 0.00 -753.74
+51 1615040922 TSM.US XOFF 0.7785 16.01.2025 15:58:46 217.8700 201.7900 157.093515 -7.38% Cash Stocks 24.1940000000 0.00 0.00 0.00 -456.39
+52 1615040983 TSM.US XOFF 2.0000 16.01.2025 15:58:48 217.8700 201.7900 403.58 -7.38% Cash Stocks 24.1940000000 0.00 0.00 0.00 -1172.49
+53 1625701320 VUSA.UK XOFF 0.1332 24.01.2025 13:02:18 93.3875 92.0525 12.261393 -1.43% Cash Stocks 29.8670100000 0.00 0.00 0.00 -8.35
+54 1625701357 VUSA.UK XOFF 7.0000 24.01.2025 13:02:19 93.3675 92.0525 644.3675 -1.41% Cash Stocks 29.8670100000 0.00 0.00 0.00 -434.51
+55 1631448584 MMM.US XOFF 0.7402 28.01.2025 19:45:29 150.7800 148.6100 110.001122 -1.44% Cash Stocks 24.1940000000 0.00 0.00 0.00 -85.17
+56 1631448606 MMM.US XOFF 2.0000 28.01.2025 19:45:31 150.7500 148.6100 297.22 -1.42% Cash Stocks 24.1940000000 0.00 0.00 0.00 -229.00
+57 1651784796 VWCE.DE XOFF 0.2819 11.02.2025 09:30:34 139.2800 138.7400 39.110806 -0.39% Cash Stocks 24.9400000000 0.00 0.00 0.00 -15.49`;
 
-const CUSTOM_CAT_COLORS = ['#4F9D6E','#C9A227','#B36BA0','#5C8FD6','#A8734F','#6BA88F'];
-const BASE_CAT_IDS = new Set(CATS.map(c=>c.id));
+  const FIO_SEED = `31.12.2018	 	 	 	 	 	0,00	0,00	537,50	0,00	0,00	 	 	 	->
+07.04.2022	Nákup	50,00	970,00	-48 500,00	140,70	-48 640,70	50,00	970,50	48 525,00	-115,70	-0,24%	970,00	 	Nákup
+29.07.2022	Nákup	3,00	1 082,00	-3 246,00	50,00	-51 936,70	53,00	1 093,00	57 929,00	5 992,30	11,54%	976,34	 	Nákup
+29.07.2022	Nákup	15,00	1 076,00	-16 140,00	66,49	-68 143,19	68,00	1 093,00	74 324,00	6 180,81	9,07%	998,32	 	Nákup
+01.11.2022	 	0,00	 	2 040,00	0,00	-66 103,19	68,00	811,00	55 148,00	-10 955,19	-16,08%	998,32	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+06.01.2023	Nákup	10,00	790,00	-7 900,00	40,00	-74 043,19	78,00	791,00	61 698,00	-12 345,19	-16,23%	971,62	 	Nákup
+01.08.2023	 	0,00	 	9 613,50	0,00	-64 429,69	78,00	965,00	75 270,00	10 840,31	14,25%	971,62	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+01.08.2024	 	0,00	 	3 447,60	0,00	-60 982,09	78,00	910,50	71 019,00	10 036,91	13,19%	971,62	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+26.08.2024	Nákup	15,00	884,00	-13 260,00	56,41	-74 298,50	93,00	885,00	82 305,00	8 006,50	8,96%	957,48	 	Nákup
+03.09.2024	Nákup	5,00	864,00	-4 320,00	40,00	-78 658,50	98,00	860,00	84 280,00	5 621,50	6,00%	952,71	 	Nákup
+01.08.2025	 	0,00	 	3 916,00	0,00	-74 742,50	98,00	1 241,00	121 618,00	46 875,50	50,00%	952,71	 	BAACEZ - Dividenda ČEZ (po zdanění, daň 15%)
+27.03.2026	CZK	 	 	 	393,60	-74 742,50	98,00	1 184,00	116 032,00	41 289,50	44,04%	952,71	 	<-   
+export Vývoj pozice na CP - KOMERČNÍ BANKA (BAAKOMB) - (1.1.2019 - 27.3.2026)
+Datum	Směr	Množství	Cena	Objem	Poplatek	Celková pozice - měna	Celková pozice CP	Close	Ocenění pozice (Close)	Zisk	Zisk v %	Prům. nákupní kurz	Prům. prodejní kurz	Text
+13.04.2022	Nákup	50,00	839,00	-41 950,00	146,80	-42 096,80	50,00	831,50	41 575,00	-521,80	-1,24%	839,00	 	Nákup
+06.05.2022	Nákup	10,00	765,00	-7 650,00	40,00	-49 786,80	60,00	750,00	45 000,00	-4 786,80	-9,61%	826,67	 	Nákup
+23.05.2022	 	0,00	 	1 861,50	0,00	-47 925,30	60,00	740,50	44 430,00	-3 495,30	-7,02%	826,67	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+29.07.2022	Nákup	8,00	609,50	-4 876,00	50,00	-52 851,30	68,00	608,00	41 344,00	-11 507,30	-21,03%	801,12	 	Nákup
+22.12.2022	 	0,00	 	3 207,90	0,00	-49 643,40	68,00	660,50	44 914,00	-4 729,40	-8,64%	801,12	 	BAAKOMB - Dividenda KOMERČNÍ BANKA (po zdanění, daň 15%)
+14.03.2023	Nákup	20,00	713,00	-14 260,00	59,91	-63 963,31	88,00	708,00	62 304,00	-1 659,31	-2,40%	781,09	 	Nákup
+11.05.2023	Nákup	18,00	687,00	-12 366,00	53,28	-76 382,59	106,00	685,00	72 610,00	-3 772,59	-4,63%	765,11	 	Nákup
+22.05.2023	 	0,00	 	4 519,42	0,00	-71 863,17	106,00	656,50	69 589,00	-2 274,17	-2,79%	765,11	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+28.05.2024	 	0,00	 	7 447,67	0,00	-64 415,50	106,00	777,00	82 362,00	17 946,50	22,03%	765,11	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+06.08.2024	Nákup	15,00	764,00	-11 460,00	50,11	-75 925,61	121,00	757,00	91 597,00	15 671,39	16,86%	764,98	 	Nákup
+26.05.2025	 	0,00	 	9 390,30	0,00	-66 535,31	121,00	1 027,00	124 267,00	57 731,69	62,10%	764,98	 	BAAKOMB - Dividenda Komerční banka (po zdanění, daň 15%)
+27.03.2026	CZK	 	 	 	400,10	-66 535,31	121,00	1 069,00	129 349,00	62 813,69	67,57%	764,98	 	<-`;
 
-// Vyplň sem svoje Google OAuth Client ID (z Google Cloud Console) a bude
-// už napevno v souboru — nemusíš ho pak zadávat znovu na každém zařízení.
-const DEFAULT_CLIENT_ID = '214525132605-v6ddptk3l1rvnrt5ai2gr830qjqj9d7f.apps.googleusercontent.com';
+  const PORTU_SEED = `Portu - První portfolio;XMK9 GY;X-TRACKERS MSCI Japan EUR Hedged UCITS ETF;EUR;9.4951;37.623;60.73;24.26;2024-04-02
+Portu - První portfolio;CSPX LN;iShares Core S&P 500 UCITS ETF;USD;3.993;590.633;805.54;21.287;2024-04-02
+Portu - První portfolio;IS3N GY;iShares Core MSCI EM IMI UCITS ETF;EUR;13.3412;31.292;48.8;24.26;2024-04-02
+Portu - První portfolio;ZPRS GY;SPDR MSCI World Small Cap UCITS;EUR;8.3825;96.958;130.02;24.26;2024-04-02
+Portu - První portfolio;SXR7 GY;iShares Core MSCI EMU UCITS ETF;EUR;4.6699;182.572;246.8;24.26;2024-04-02
+Portu - První portfolio;3SUD GY;iShares J.P. Morgan USD EM Bond UCITS ETF;EUR;70.5105;4.769;5.33;24.26;2024-04-02
+Portu - První portfolio;LQDA LN;iShares USD Corp Bond UCITS ETF;USD;46.7076;5.900;6.37;21.287;2024-04-02
+Portu - První portfolio;DPYE LN;iShares Developed Markets Property Yield UCITS ETF;EUR;105.0358;5.631;6.44;24.26;2024-04-02
+Portu - První portfolio;DTLA LN;iShares USD Treasury Bond 20+y UCITS ETF;USD;152.0993;4.537;4.68;21.287;2024-04-02
+Portu - První portfolio;IGIL LN;iShares Global Inflation Linked Govt Bond UCITS ETF;USD;2.0782;157.512;165.46;21.287;2024-04-02
+Portu - Technologický pokrok;SBIO LN;Invesco NASDAQ Biotech UCITS ETF;USD;10.0095;46.655;68.81;21.287;2024-10-14
+Portu - Technologický pokrok;IUIT LN;iShares S&P 500 Information Technology Sector UCITS ETF;USD;23.311;33.328;49.8;21.287;2024-10-14
+Portu - Technologický pokrok;USPY LN;L&G Cyber Security UCITS ETF;USD;24.661;28.415;44.28;21.287;2024-10-14
+Portu - Technologický pokrok;2B76 GY;iShares Automation & Robotics UCITS ETF;EUR;68.8321;12.690;19.15;24.26;2024-10-14
+Portu - Technologický pokrok;IEVD GY;iShares Electric Vehicles and Driving Technology UCITS ETF;EUR;57.2481;6.933;12.07;24.26;2024-10-14
+Portu - Technologický pokrok;DRUP GY;Amundi MSCI Disruptive Technology UCITS ETF Acc;EUR;43.3367;14.121;19.59;24.26;2024-10-14
+Portu - První portfolio;Hotovost;Hotovost CZK;CZK;4112.41;1;1;1;
+Portu - Technologický pokrok;Hotovost;Hotovost CZK;CZK;1319.33;1;1;1;`;
 
-const DRIVE_FILE_NAME = 'chata-novinsko-vydaje.json';
-const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+  const MONETA_SEED = `Moneta;GS Global Equity Income;Goldman Sachs Global Equity Income;CZK;0.7;14285.7143;22817.5857;1;2022-04-05
+Moneta;Fidelity World;Fidelity World;CZK;53.08;2114.0222;3146.0000;1;2022-01-17
+Moneta;UNIQA Global Equity;UNIQA Selection Global Equity;CZK;82411;2.2965;3.0738;1;2022-01-17
+Moneta;Petrus Active Value;Petrus Advisers Active Value Fund;CZK;4.17;1543.4604;1500.5683;1;2025-02-14`;
 
-let expenses = [];
-let budget = null;
+  // Aktualizovaný stav XTB (výpis 07/2026): nákupní ceny a data převzaty z předchozího výpisu, u nových pozic (META, CSG) nákupní cena = aktuální
+  const XTB_SEED2 = `XTB;AAPL.US;Apple Inc;USD;2;228.016;289.010;21.287;2024-07-16
+XTB;ASO.US;Academy Sports & Outdoors;USD;8;50.500;47.070;21.287;2024-12-10
+XTB;BRYN.DE;Berkshire Hathaway B;EUR;3;450.634;435.150;24.26;2024-11-22
+XTB;CSG.NL;Czechoslovak Group;EUR;45;12.794;12.794;24.26;
+XTB;GOOGL.US;Alphabet A;USD;5;181.129;357.310;21.287;2024-07-16
+XTB;GRMN.US;Garmin Ltd;USD;1;172.512;237.350;21.287;2024-07-22
+XTB;JNJ.US;Johnson & Johnson;USD;1;159.875;253.760;21.287;2024-07-25
+XTB;JPM.US;JPMorgan Chase;USD;1;210.630;327.020;21.287;2024-07-22
+XTB;META.US;Meta Platforms A;USD;1;562.910;562.910;21.287;
+XTB;MMM.US;3M Co;USD;4;130.669;161.877;21.287;2024-07-22
+XTB;MSFT.US;Microsoft Corp;USD;1;440.700;372.880;21.287;2024-07-16
+XTB;NVD.DE;NVIDIA Corp;EUR;4;134.980;173.560;24.26;2025-01-16
+XTB;SAP.DE;SAP SE;EUR;5;223.500;133.800;24.26;2024-11-11
+XTB;TSLA.US;Tesla Inc;USD;2;327.509;420.590;21.287;2024-07-16
+XTB;TSM.US;Taiwan Semiconductor ADR;USD;2;217.870;478.030;21.287;2025-01-16
+XTB;TTWO.US;Take-Two Interactive;USD;6;178.547;249.110;21.287;2024-10-29
+XTB;VUSA.UK;Vanguard S&P 500 UCITS DIST;GBP;11;93.368;106.805;28.0;2025-01-24
+XTB – dcera;VWCE.DE;Vanguard FTSE All-World ACC;EUR;16;127.986;165.179;24.26;2024-10-07`;
 
-// drive state
-let clientId = null;
-let driveFileId = null;
-let accessToken = null;
-let tokenClient = null;
-let driveReady = false;
+  // Přesný stav XTB z kompletní historie účtu (export 13.7.2026): vážené průměry nákupů vč. frakcí, LLY bez aktuální ceny (=nákupní)
+  const XTB_SEED3 = `XTB;AAPL.US;Apple Inc;USD;2.6302;213.022;289.01;21.287;2024-07-16
+XTB;ASO.US;Academy Sports & Outdoors;USD;8.2659;50.5;47.07;21.287;2024-12-10
+XTB;BRYN.DE;Berkshire Hathaway B;EUR;3.1093;450.634;435.15;24.26;2024-11-22
+XTB;CSG.NL;Czechoslovak Group;EUR;45.3261;31.198;12.794;24.26;2026-01-23
+XTB;GOOGL.US;Alphabet A;USD;5.4052;174.611;357.31;21.287;2024-07-16
+XTB;GRMN.US;Garmin Ltd;USD;1.2418;172.512;237.35;21.287;2024-07-22
+XTB;JNJ.US;Johnson & Johnson;USD;1.3305;159.875;253.76;21.287;2024-07-25
+XTB;JPM.US;JPMorgan Chase;USD;1.0171;210.63;327.02;21.287;2024-07-22
+XTB;LLY.US;Eli Lilly;USD;0.1362;750.01;750.01;21.287;2024-11-22
+XTB;META.US;Meta Platforms A;USD;1;615.33;562.91;21.287;2025-11-12
+XTB;MMM.US;3M Co;USD;4.8012;130.669;161.877;21.287;2024-07-22
+XTB;MSFT.US;Microsoft Corp;USD;1.8997;413.229;372.88;21.287;2024-07-16
+XTB;NVD.DE;NVIDIA Corp;EUR;4;134.98;173.56;24.26;2025-01-16
+XTB;SAP.DE;SAP SE;EUR;5.4144;202.772;133.8;24.26;2024-11-11
+XTB;TSLA.US;Tesla Inc;USD;2.4714;327.509;420.59;21.287;2024-07-16
+XTB;TSM.US;Taiwan Semiconductor ADR;USD;2.7785;217.87;478.03;21.287;2025-01-16
+XTB;TTWO.US;Take-Two Interactive;USD;6.5228;183.232;249.11;21.287;2024-10-29
+XTB;VUSA.UK;Vanguard S&P 500 UCITS DIST;GBP;11.6973;88.26;106.805;28.0;2025-01-24
+XTB – dcera;VWCE.DE;Vanguard FTSE All-World ACC;EUR;17.0045;131.64;165.179;24.26;2024-10-07`;
 
-const catSelect = document.getElementById('inCat');
-function rebuildCatSelect(selectValue){
-  catSelect.innerHTML = '';
-  CATS.forEach(c=>{
-    const opt = document.createElement('option');
-    opt.value = c.id; opt.textContent = c.name;
-    catSelect.appendChild(opt);
-  });
-  const newOpt = document.createElement('option');
-  newOpt.value = '__new__';
-  newOpt.textContent = '+ Nová kategorie…';
-  catSelect.appendChild(newOpt);
-  if(selectValue) catSelect.value = selectValue;
-}
-rebuildCatSelect();
+  const LINE_RE = /^\d+\s+\d+\s+(\S+)\s+\S+\s+([\d.]+)\s+(\d{2}\.\d{2}\.\d{4})\s+\d{2}:\d{2}:\d{2}\s+([\d.]+)\s+([\d.]+)\s+[\d.]+\s+-?[\d.]+%\s+\S+\s+\S+\s+([\d.]+)/;
 
-catSelect.addEventListener('change', ()=>{
-  if(catSelect.value !== '__new__') return;
-  const name = (prompt('Název nové kategorie:') || '').trim();
-  if(!name){ rebuildCatSelect(CATS[0]?.id); return; }
-  const id = 'c_' + name.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || ('c' + Date.now());
-  const existing = CATS.find(c=>c.id===id);
-  if(existing){ rebuildCatSelect(existing.id); return; }
-  const color = CUSTOM_CAT_COLORS[CATS.length % CUSTOM_CAT_COLORS.length];
-  CATS.push({ id, name, color });
-  lsSet('customCategories', CATS.filter(c=>!BASE_CAT_IDS.has(c.id)));
-  rebuildCatSelect(id);
-});
-document.getElementById('inDate').valueAsDate = new Date();
-
-const LS_PREFIX = 'chataNovinsko_';
-function lsGet(key){
-  try{
-    const raw = localStorage.getItem(LS_PREFIX + key);
-    return raw === null ? null : JSON.parse(raw);
-  }catch(e){ return null; }
-}
-function lsSet(key, value){
-  try{ localStorage.setItem(LS_PREFIX + key, JSON.stringify(value)); }
-  catch(e){ console.error('Chyba při ukládání do prohlížeče', e); }
-}
-
-function fmt(n){
-  return new Intl.NumberFormat('cs-CZ').format(Math.round(n)) + ' Kč';
-}
-function catInfo(id){ return CATS.find(c=>c.id===id) || CATS[CATS.length-1]; }
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str || '';
-  return div.innerHTML;
-}
-
-/* ---------- local persistence (per-user, always-on fallback) ---------- */
-
-async function loadLocal(){
-  expenses = lsGet('expenses') || [];
-  budget = lsGet('budget');
-  clientId = lsGet('driveClientId') || DEFAULT_CLIENT_ID;
-  driveFileId = lsGet('driveFileId');
-  const customCats = lsGet('customCategories') || [];
-  customCats.forEach(c=>{
-    if(!CATS.find(existing=>existing.id===c.id)) CATS.push(c);
-  });
-  if(budget) document.getElementById('budgetInput').value = budget;
-  if(clientId) document.getElementById('clientIdInput').value = clientId;
-}
-
-async function saveLocal(){ lsSet('expenses', expenses); }
-async function saveBudgetLocal(){ lsSet('budget', budget); }
-
-/* ---------- Google Drive sync ---------- */
-
-function setSyncStatus(text, state){
-  document.getElementById('syncText').textContent = text;
-  const dot = document.getElementById('syncDot');
-  dot.className = 'sync-dot' + (state ? ' ' + state : '');
-}
-
-function initTokenClient(){
-  if(!window.google || !clientId) return;
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
-    scope: DRIVE_SCOPE,
-    callback: async (resp)=>{
-      if(resp.error){
-        setSyncStatus('Google Disk: přihlášení selhalo', '');
-        return;
-      }
-      accessToken = resp.access_token;
-      driveReady = true;
-      document.getElementById('btnSyncConnect').style.display = 'none';
-      setSyncStatus('Google Disk: synchronizuji…', 'busy');
-      await driveSync();
-    }
-  });
-}
-
-async function driveApi(url, opts={}){
-  const res = await fetch(url, {
-    ...opts,
-    headers: { ...(opts.headers||{}), Authorization: 'Bearer ' + accessToken }
-  });
-  if(!res.ok) throw new Error('Drive API ' + res.status);
-  return res;
-}
-
-async function driveFindFile(){
-  const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
-  const res = await driveApi(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name)`);
-  const data = await res.json();
-  return (data.files && data.files[0]) ? data.files[0].id : null;
-}
-
-async function driveCreateFile(content){
-  const boundary = 'chata_novinsko_boundary';
-  const metadata = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
-  const body =
-    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
-    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`;
-  const res = await driveApi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
-    method: 'POST',
-    headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-    body
-  });
-  const data = await res.json();
-  return data.id;
-}
-
-async function driveUpdateFile(fileId, content){
-  await driveApi(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: content
-  });
-}
-
-async function driveReadFile(fileId){
-  const res = await driveApi(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
-  return res.json();
-}
-
-async function driveSync(){
-  try{
-    if(!driveFileId) driveFileId = await driveFindFile();
-
-    if(driveFileId){
-      const remote = await driveReadFile(driveFileId);
-      // remote wins if it has more items or a newer explicit timestamp; merge simply by id
-      const remoteExpenses = remote.expenses || [];
-      const map = new Map();
-      [...expenses, ...remoteExpenses].forEach(e => map.set(e.id, e));
-      expenses = Array.from(map.values());
-      if(remote.budget !== undefined && budget === null) budget = remote.budget;
-      await saveLocal();
-      if(budget) document.getElementById('budgetInput').value = budget;
-    } else {
-      driveFileId = await driveCreateFile(JSON.stringify({ expenses, budget }));
-    }
-
-    lsSet('driveFileId', driveFileId);
-    await driveUpdateFile(driveFileId, JSON.stringify({ expenses, budget }));
-    setSyncStatus('Google Disk: připojeno', 'on');
-    document.getElementById('footerNote').textContent = 'ukládá se automaticky · Google Disk + zařízení';
-    render();
-  }catch(e){
-    console.error(e);
-    setSyncStatus('Google Disk: chyba synchronizace', '');
-  }
-}
-
-async function drivePush(){
-  if(!driveReady || !driveFileId) return;
-  try{
-    setSyncStatus('Google Disk: ukládám…', 'busy');
-    await driveUpdateFile(driveFileId, JSON.stringify({ expenses, budget }));
-    setSyncStatus('Google Disk: připojeno', 'on');
-  }catch(e){
-    console.error(e);
-    setSyncStatus('Google Disk: chyba ukládání', '');
-  }
-}
-
-document.getElementById('btnSyncToggle').addEventListener('click', ()=>{
-  document.getElementById('syncSettings').classList.toggle('open');
-});
-
-document.getElementById('clientIdInput').addEventListener('change', async (e)=>{
-  clientId = e.target.value.trim() || null;
-  lsSet('driveClientId', clientId);
-  if(clientId){
-    initTokenClient();
-    document.getElementById('btnSyncConnect').style.display = 'inline-block';
-    setSyncStatus('Google Disk: připraveno k připojení', '');
-  }
-});
-
-document.getElementById('btnSyncConnect').addEventListener('click', ()=>{
-  if(!tokenClient) initTokenClient();
-  if(tokenClient) tokenClient.requestAccessToken();
-});
-
-/* ---------- render ---------- */
-
-function render(){
-  const total = expenses.reduce((s,e)=>s+Number(e.amount),0);
-  document.getElementById('statTotal').textContent = fmt(total);
-  document.getElementById('statCount').textContent = expenses.length;
-
-  const budgetStatEl = document.getElementById('statBudget');
-  if(budget){
-    const remaining = budget - total;
-    budgetStatEl.textContent = fmt(remaining) + (remaining<0 ? ' přes' : ' zbývá');
-    budgetStatEl.className = 'stat-value ' + (remaining<0 ? 'over':'under');
-  } else {
-    budgetStatEl.textContent = '—';
-    budgetStatEl.className = 'stat-value';
+  function currencyFromSymbol(symbol){
+    const suf = symbol.split('.').pop();
+    const map = {US:'USD', DE:'EUR', UK:'GBX', NO:'NOK', FR:'EUR', NL:'EUR', ES:'EUR', IT:'EUR', PL:'PLN'};
+    return map[suf] || suf || '—';
   }
 
-  const chartRow = document.getElementById('chartRow');
-  const chartBars = document.getElementById('chartBars');
-  chartBars.innerHTML = '';
-  if(expenses.length){
-    chartRow.style.display = 'block';
-    const byCat = CATS.map(c=>({
-      ...c,
-      sum: expenses.filter(e=>e.category===c.id).reduce((s,e)=>s+Number(e.amount),0)
-    })).filter(c=>c.sum>0).sort((a,b)=>b.sum-a.sum);
-    const max = Math.max(...byCat.map(c=>c.sum), 1);
-    byCat.forEach(c=>{
-      const row = document.createElement('div');
-      row.className = 'bar-row';
-      row.innerHTML = `
-        <div class="bar-name">${c.name}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${(c.sum/max*100).toFixed(1)}%; background:${c.color};"></div></div>
-        <div class="bar-amount">${fmt(c.sum)}</div>
-      `;
-      chartBars.appendChild(row);
+  function czDateToIso(d){
+    const [dd,mm,yyyy] = d.split('.');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function parseStatement(text){
+    const lots = {};
+    text.split('\n').forEach(line=>{
+      const m = line.match(LINE_RE);
+      if(!m) return;
+      const symbol = m[1], qty = parseFloat(m[2]), dateIso = czDateToIso(m[3]), open = parseFloat(m[4]), cur = parseFloat(m[5]), fx = parseFloat(m[6]);
+      if(!lots[symbol]) lots[symbol] = {symbol, qty:0, costSum:0, currentPrice:cur, fx:fx, firstBuyDate:dateIso};
+      lots[symbol].qty += qty;
+      lots[symbol].costSum += qty*open;
+      lots[symbol].currentPrice = cur;
+      lots[symbol].fx = fx;
+      if(dateIso < lots[symbol].firstBuyDate) lots[symbol].firstBuyDate = dateIso;
     });
-  } else {
-    chartRow.style.display = 'none';
+    return Object.values(lots).filter(l=>l.qty>0).map(l=>({
+      id: 'h_'+Math.random().toString(36).slice(2,10),
+      symbol: l.symbol,
+      quantity: l.qty,
+      avgBuyPrice: l.costSum/l.qty,
+      currentPrice: l.currentPrice,
+      currency: currencyFromSymbol(l.symbol),
+      fxRate: l.fx,
+      firstBuyDate: l.firstBuyDate
+    }));
   }
 
-  const ledger = document.getElementById('ledger');
-  if(!expenses.length){
-    ledger.innerHTML = '<div class="empty">Zatím žádné výdaje. Přidejte první položku výše.</div>';
-    return;
+  function parseCzechNum(s){
+    if(s === undefined || s === null) return NaN;
+    s = String(s).trim();
+    if(s === '' || s === '-' || s === '->' || s === '<-') return NaN;
+    s = s.replace(/\u00A0/g,'').replace(/ /g,'').replace(/%/g,'').replace(',', '.');
+    return parseFloat(s);
   }
-  ledger.innerHTML = '';
-  CATS.forEach(cat=>{
-    const items = expenses
-      .filter(e=>e.category===cat.id)
-      .sort((a,b)=> new Date(b.date) - new Date(a.date));
-    if(!items.length) return;
-    const subtotal = items.reduce((s,e)=>s+Number(e.amount),0);
 
-    const group = document.createElement('div');
-    group.className = 'cat-group';
-    group.innerHTML = `
-      <div class="cat-head">
-        <div class="cat-name"><span class="cat-dot" style="background:${cat.color}"></span>${cat.name}</div>
-        <div class="cat-subtotal">${fmt(subtotal)}</div>
+  function splitFioFields(line){
+    if(line.indexOf('\t') !== -1) return line.split('\t');
+    return line.split(/\s{2,}/);
+  }
+
+  function parseFioStatement(text){
+    const lines = text.split('\n');
+    const dateRe = /^\d{2}\.\d{2}\.\d{4}$/;
+    const blocks = [];
+    let current = [];
+    function flush(){ if(current.length) blocks.push(current); current = []; }
+    lines.forEach(line=>{
+      const fields = splitFioFields(line);
+      if(fields.length && dateRe.test((fields[0]||'').trim())){
+        current.push(fields.map(f=>f===undefined?'':f.trim()));
+      } else {
+        flush();
+      }
+    });
+    flush();
+
+    const results = [];
+    blocks.forEach(block=>{
+      let name = null;
+      for(const f of block){
+        const txt = f[f.length-1] || '';
+        const m = txt.match(/([A-Z0-9]{3,10})\s*-\s*Dividenda\s+([^(]+)/i);
+        if(m){ name = m[2].trim(); break; }
+      }
+      let last = null;
+      for(let i=block.length-1;i>=0;i--){
+        if(block[i].length >= 13 && !isNaN(parseCzechNum(block[i][7]))){ last = block[i]; break; }
+      }
+      if(!last) return;
+      let firstBuyDate = null;
+      block.forEach(row=>{
+        if((row[1]||'').trim() === 'Nákup'){
+          const iso = czDateToIso(row[0].trim());
+          if(!firstBuyDate || iso < firstBuyDate) firstBuyDate = iso;
+        }
+      });
+      const quantity = parseCzechNum(last[7]);
+      const currentPrice = parseCzechNum(last[8]);
+      const avgBuyPrice = parseCzechNum(last[12]);
+      const investedNet = Math.abs(parseCzechNum(last[6]));
+      const currentValue = parseCzechNum(last[9]);
+      const pl = parseCzechNum(last[10]);
+      const plPct = parseCzechNum(last[11]);
+      if(!quantity || quantity<=0 || isNaN(currentPrice) || isNaN(avgBuyPrice)) return;
+      results.push({
+        id: 'h_'+Math.random().toString(36).slice(2,10),
+        symbol: name || ('Pozice '+(results.length+1)),
+        quantity, avgBuyPrice, currentPrice,
+        currency: 'CZK', fxRate: 1,
+        totalReturn: true,
+        investedTR: isNaN(investedNet)?quantity*avgBuyPrice:investedNet,
+        currentValueTR: isNaN(currentValue)?quantity*currentPrice:currentValue,
+        plTR: isNaN(pl)?0:pl,
+        plPctTR: isNaN(plPct)?0:plPct,
+        firstBuyDate: firstBuyDate
+      });
+    });
+    return results;
+  }
+
+  function parseCsvStatement(text){
+    const results = [];
+    text.split('\n').forEach(line=>{
+      line = line.trim();
+      if(!line) return;
+      const parts = line.split(';').map(p=>p.trim());
+      if(parts.length < 7) return;
+      const [platform, symbol, instrument, currency, qtyS, buyS, curS, fxS, dateS] = parts;
+      const quantity = parseFloat(qtyS.replace(',','.'));
+      const avgBuyPrice = parseFloat(buyS.replace(',','.'));
+      const currentPrice = parseFloat(curS.replace(',','.'));
+      const fxRate = fxS !== undefined && fxS !== '' ? parseFloat(fxS.replace(',','.')) : 1;
+      if(!platform || !symbol || isNaN(quantity) || isNaN(avgBuyPrice) || isNaN(currentPrice)) return;
+      results.push({
+        id: 'h_'+Math.random().toString(36).slice(2,10),
+        platform, symbol, instrument: instrument || '', currency: currency || 'CZK',
+        quantity, avgBuyPrice, currentPrice, fxRate: isNaN(fxRate)?1:fxRate,
+        firstBuyDate: dateS && dateS.trim() ? dateS.trim() : null
+      });
+    });
+    return results;
+  }
+
+  const STORAGE_KEY = 'portfolio-holdings-v1';
+  let holdings = [];
+  let loaded = false;
+  const expandedPlatforms = new Set();
+  let sortMode = 'default';
+  let privacyMode = true;          // po načtení jsou částky skryté
+  let currentYearlyTab = 'total';
+  let storageMode = 'local'; // 'claude' | 'local' | 'memory'
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  async function save(){
+    const json = JSON.stringify(holdings);
+    if(storageMode === 'claude'){
+      try{ await window.storage.set('holdings-v1', json, false); return; }
+      catch(e){ /* fall through to local */ }
+    }
+    try{
+      localStorage.setItem(STORAGE_KEY, json);
+    }catch(e){
+      console.error('Uložení selhalo', e);
+      toast('Data se nepodařilo uložit do prohlížeče');
+    }
+  }
+
+  // Doplní firstBuyDate do dat uložených starší verzí aplikace
+  function migrateBuyDates(){
+    let changed = false;
+    const known = {};
+    [...parseStatement(XTB_SEED), ...parseFioStatement(FIO_SEED), ...parseCsvStatement(PORTU_SEED), ...parseCsvStatement(MONETA_SEED)].forEach(p=>{
+      if(p.firstBuyDate) known[p.symbol] = p.firstBuyDate;
+    });
+    holdings.forEach(h=>{
+      if(!h.firstBuyDate && known[h.symbol]){
+        h.firstBuyDate = known[h.symbol];
+        changed = true;
+      }
+    });
+    // Doplnění nově přidané platformy Moneta do starších dat
+    if(!holdings.some(h=>h.platform === 'Moneta')){
+      parseCsvStatement(MONETA_SEED).forEach(p=>holdings.push(p));
+      changed = true;
+    }
+    // Aktualizace XTB na přesná data z kompletní historie (pozná se podle chybějící LLY.US)
+    if(holdings.some(h=>h.platform === 'XTB') && !holdings.some(h=>h.platform === 'XTB' && h.symbol === 'LLY.US')){
+      holdings = holdings.filter(h=>h.platform !== 'XTB');
+      parseCsvStatement(XTB_SEED3).forEach(p=>holdings.push(p));
+      changed = true;
+    }
+    // Oddělení spoření pro dceru: VWCE má vlastní platformu
+    holdings.forEach(h=>{
+      if(h.platform === 'XTB' && h.symbol === 'VWCE.DE'){
+        h.platform = 'XTB – dcera';
+        changed = true;
+      }
+    });
+    if(changed) save();
+  }
+
+  async function load(){
+    // Try Claude.ai artifact storage first (works inside claude.ai chat)
+    if(typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function'){
+      try{
+        const res = await window.storage.get('holdings-v1', false);
+        if(res && res.value){
+          storageMode = 'claude';
+          holdings = JSON.parse(res.value);
+          loaded = true; render(); return;
+        }
+        storageMode = 'claude';
+      }catch(e){ /* not available, fall back */ }
+    }
+    // Fall back to localStorage (works when the file is downloaded and opened directly)
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        holdings = JSON.parse(raw);
+        migrateBuyDates();
+        loaded = true; render(); return;
+      }
+      storageMode = 'local';
+    }catch(e){
+      storageMode = 'memory';
+    }
+    // First run anywhere: seed with the statements provided so far
+    holdings = [
+      ...parseCsvStatement(XTB_SEED3),
+      ...parseFioStatement(FIO_SEED).map(h=>({...h, platform:'Fio'})),
+      ...parseCsvStatement(PORTU_SEED),
+      ...parseCsvStatement(MONETA_SEED)
+    ];
+    await save();
+    loaded = true;
+    render();
+  }
+
+  function fmt(n, d=2){
+    if(!isFinite(n)) return '—';
+    return n.toLocaleString('cs-CZ',{minimumFractionDigits:d, maximumFractionDigits:d});
+  }
+  function fmtCZK(n){ return privacyMode ? '••••• Kč' : fmt(n,0) + ' Kč'; }
+  function fmtMoney(n){ return privacyMode ? '•••••' : fmt(n,0); }
+
+  function computeRow(h){
+    const fx = h.fxRate || 1;
+    if(h.totalReturn){
+      const invested = h.investedTR, currentValue = h.currentValueTR, pl = h.plTR, plPct = h.plPctTR;
+      return { invested, currentValue, pl, plPct, investedCZK: invested*fx, currentValueCZK: currentValue*fx, plCZK: pl*fx };
+    }
+    const invested = h.quantity * h.avgBuyPrice;
+    const currentValue = h.quantity * h.currentPrice;
+    const pl = currentValue - invested;
+    const plPct = invested !== 0 ? (pl/invested*100) : 0;
+    return { invested, currentValue, pl, plPct, investedCZK: invested*fx, currentValueCZK: currentValue*fx, plCZK: pl*fx };
+  }
+
+  function render(){
+    if(!loaded) return;
+    let totalInvestedCZK=0, totalCurrentCZK=0;
+    holdings.forEach(h=>{ const c = computeRow(h); totalInvestedCZK += c.investedCZK; totalCurrentCZK += c.currentValueCZK; });
+    const totalPlCZK = totalCurrentCZK - totalInvestedCZK;
+    const totalPlPct = totalInvestedCZK !== 0 ? (totalPlCZK/totalInvestedCZK*100) : 0;
+
+    document.getElementById('summary').innerHTML = `
+      <div class="card">
+        <div class="label">Investováno</div>
+        <div class="value">${fmtCZK(totalInvestedCZK)}</div>
+      </div>
+      <div class="card">
+        <div class="label">Aktuální hodnota</div>
+        <div class="value">${fmtCZK(totalCurrentCZK)}</div>
+      </div>
+      <div class="card">
+        <div class="label">Zisk / ztráta</div>
+        <div class="value ${totalPlCZK>=0?'pos':'neg'}">${totalPlCZK>=0?'+':''}${fmtCZK(totalPlCZK)}</div>
+      </div>
+      <div class="card">
+        <div class="label">Výkonnost</div>
+        <div class="value ${totalPlPct>=0?'pos':'neg'}">${totalPlPct>=0?'+':''}${fmt(totalPlPct,2)} %</div>
+        <div class="sub">${holdings.length} pozic</div>
       </div>
     `;
-    items.forEach((e,idx)=>{
-      const row = document.createElement('div');
-      row.className = 'item-row';
-      const dateStr = new Date(e.date).toLocaleDateString('cs-CZ', {day:'2-digit', month:'2-digit', year:'2-digit'});
-      row.innerHTML = `
-        <div class="item-num">${String(idx+1).padStart(2,'0')}</div>
-        <div class="item-date">${dateStr}</div>
-        <div class="item-desc">${escapeHtml(e.description) || '—'}</div>
-        <div class="item-amount">${fmt(e.amount)}</div>
-        <button class="item-del" data-id="${e.id}" title="Smazat">×</button>
-      `;
-      group.appendChild(row);
+
+    const platforms = {};
+    holdings.forEach(h=>{
+      const p = h.platform || 'Bez platformy';
+      if(!platforms[p]) platforms[p] = [];
+      platforms[p].push(h);
     });
-    ledger.appendChild(group);
-  });
 
-  ledger.querySelectorAll('.item-del').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      expenses = expenses.filter(e=>e.id !== btn.dataset.id);
-      await saveLocal();
-      await drivePush();
-      render();
-    });
-  });
-}
+    const container = document.getElementById('holdings');
+    if(holdings.length === 0){
+      container.innerHTML = '<div class="empty">Zatím žádné pozice. Přidej pozici ručně nebo vlož výpis z brokera.</div>';
+      return;
+    }
 
-/* ---------- events ---------- */
-
-document.getElementById('btnAdd').addEventListener('click', async ()=>{
-  const date = document.getElementById('inDate').value;
-  const category = document.getElementById('inCat').value;
-  const description = document.getElementById('inDesc').value.trim();
-  const amount = parseFloat(document.getElementById('inAmount').value);
-
-  if(!date || !amount || amount <= 0){
-    alert('Vyplňte prosím datum a částku výdaje.');
-    return;
-  }
-
-  expenses.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
-    date, category, description, amount
-  });
-  await saveLocal();
-  await drivePush();
-
-  document.getElementById('inDesc').value = '';
-  document.getElementById('inAmount').value = '';
-  document.getElementById('inDesc').focus();
-
-  render();
-});
-
-['inDesc','inAmount'].forEach(id=>{
-  document.getElementById(id).addEventListener('keydown', e=>{
-    if(e.key === 'Enter') document.getElementById('btnAdd').click();
-  });
-});
-
-document.getElementById('budgetInput').addEventListener('change', async (e)=>{
-  const v = parseFloat(e.target.value);
-  budget = (v && v > 0) ? v : null;
-  await saveBudgetLocal();
-  await drivePush();
-  render();
-});
-
-/* ---------- init ---------- */
-
-async function init(){
-  await loadLocal();
-  rebuildCatSelect();
-  render();
-  if(clientId){
-    setSyncStatus('Google Disk: připraveno k připojení', '');
-    document.getElementById('btnSyncConnect').style.display = 'inline-block';
-    const waitForGoogle = setInterval(()=>{
-      if(window.google && window.google.accounts){
-        clearInterval(waitForGoogle);
-        initTokenClient();
+    let html = '';
+    Object.keys(platforms).sort().forEach(pf=>{
+      const rows = platforms[pf];
+      let pfInvCZK=0, pfCurCZK=0;
+      rows.forEach(h=>{ const c=computeRow(h); pfInvCZK+=c.investedCZK; pfCurCZK+=c.currentValueCZK; });
+      if(sortMode !== 'default'){
+        rows.sort((a,b)=>{
+          const ca = computeRow(a), cb = computeRow(b);
+          switch(sortMode){
+            case 'plDesc': return cb.plCZK - ca.plCZK;
+            case 'plAsc': return ca.plCZK - cb.plCZK;
+            case 'pctDesc': return cb.plPct - ca.plPct;
+            case 'pctAsc': return ca.plPct - cb.plPct;
+            case 'valDesc': return cb.currentValueCZK - ca.currentValueCZK;
+            default: return 0;
+          }
+        });
       }
-    }, 200);
-  }
-}
+      const pfPl = pfCurCZK - pfInvCZK;
 
-init();
+      html += `<div class="platform-block${expandedPlatforms.has(pf)?' open':''}" data-pf="${escapeHtml(pf)}">
+        <div class="platform-head" data-toggle="${escapeHtml(pf)}">
+          <h2><span class="pf-chevron">▼</span>${escapeHtml(pf)}</h2>
+          <div class="pf-total">${fmtCZK(pfCurCZK)} &nbsp;<span class="${pfPl>=0?'pos':'neg'}">${pfPl>=0?'+':''}${fmtCZK(pfPl)}</span></div>
+        </div>
+        <div class="pf-body">
+        <div class="table-scroll"><table>
+          <thead>
+            <tr>
+              <th>Symbol</th><th>Měna</th><th>Množství</th><th>Nákup</th><th>Aktuální</th>
+              <th>Hodnota Kč</th><th>Zisk/ztráta Kč</th><th>%</th><th></th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      rows.forEach(h=>{
+        const c = computeRow(h);
+        html += `<tr data-id="${h.id}">
+          <td class="sym">${escapeHtml(h.symbol)}</td>
+          <td>${escapeHtml(h.currency||'')}</td>
+          <td><input class="editable" data-field="quantity" value="${trimNum(h.quantity)}"></td>
+          <td><input class="editable" data-field="avgBuyPrice" value="${trimNum(h.avgBuyPrice)}"></td>
+          <td><input class="editable" data-field="currentPrice" value="${trimNum(h.currentPrice)}"></td>
+          <td>${fmtMoney(c.currentValueCZK)}</td>
+          <td class="${c.plCZK>=0?'pos':'neg'}">${privacyMode?'':(c.plCZK>=0?'+':'')}${fmtMoney(c.plCZK)}</td>
+          <td class="${c.plPct>=0?'pos':'neg'}">${c.plPct>=0?'+':''}${fmt(c.plPct,1)}%</td>
+          <td><button class="del-btn" data-del="${h.id}" title="Smazat">✕</button></td>
+        </tr>`;
+      });
+
+      html += `</tbody></table></div></div></div>`;
+    });
+
+    container.innerHTML = html;
+    container.querySelectorAll('.editable').forEach(inp=> inp.addEventListener('change', onFieldChange));
+    container.querySelectorAll('[data-del]').forEach(btn=> btn.addEventListener('click', onDelete));
+    container.querySelectorAll('[data-toggle]').forEach(head=>{
+      head.addEventListener('click', (e)=>{
+        if(e.target.closest('input') || e.target.closest('button')) return;
+        const pf = head.getAttribute('data-toggle');
+        if(expandedPlatforms.has(pf)) expandedPlatforms.delete(pf); else expandedPlatforms.add(pf);
+        head.closest('.platform-block').classList.toggle('open');
+      });
+    });
+    renderTimeTest();
+    renderExposure();
+  }
+
+  function trimNum(n){
+    if(n === undefined || n === null || isNaN(n)) return '';
+    return (Math.round(n*10000)/10000).toString();
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function onFieldChange(e){
+    const tr = e.target.closest('tr');
+    const id = tr.getAttribute('data-id');
+    const field = e.target.getAttribute('data-field');
+    const val = parseFloat(e.target.value.replace(',','.'));
+    const h = holdings.find(x=>x.id===id);
+    if(!h) return;
+    h[field] = isNaN(val) ? 0 : val;
+    if(h.totalReturn){
+      delete h.totalReturn; delete h.investedTR; delete h.currentValueTR; delete h.plTR; delete h.plPctTR;
+      toast('Pozice přepnuta na přepočet z ceny (dividendy se dál nezapočítávají)');
+    }
+    await save();
+    render();
+  }
+
+  async function onDelete(e){
+    const id = e.target.getAttribute('data-del');
+    holdings = holdings.filter(h=>h.id!==id);
+    await save();
+    render();
+    toast('Pozice smazána');
+  }
+
+  // --- Roční výnosy (dopočteno z historie transakcí, viz chat) ---
+  const YEARLY_FIO = [
+    {label:'2022', value:-15685},
+    {label:'2023', value:24251},
+    {label:'2024', value:12727},
+    {label:'2025', value:83314},
+    {label:"2026*", value:-504},
+  ];
+  const YEARLY_PORTU = {
+    labels: ['2024*','2025*','2026'],
+    series: [
+      {name:'První portfolio', color:'#c9a961', values:[6400, 300, 29500]},
+      {name:'Technologický pokrok', color:'#5c8ab8', values:[50, 4500, 34700]},
+    ]
+  };
+
+  const YEARLY_XTB = [
+    {label:'2024', value:24928},
+    {label:'2025–26*', value:60435},
+  ];
+
+  const YEARLY_TOTAL = [
+    {label:'2022', value:-23531},
+    {label:'2023', value:50272},
+    {label:'2024', value:85686},
+    {label:'2025', value:111884},
+    {label:'2026*', value:104796},
+  ];
+
+  const YEARLY_MONETA = [
+    {label:'2022', value:-7846},
+    {label:'2023', value:26021},
+    {label:'2024', value:41581},
+    {label:'2025', value:23770},
+    {label:'2026*', value:41100},
+  ];
+
+  function fmtSigned(n){
+    if(privacyMode) return '•••';
+    const s = Math.round(n).toLocaleString('cs-CZ');
+    return (n>=0?'+':'') + s + ' Kč';
+  }
+
+  function renderYearlyChart(tab){
+    const chartEl = document.getElementById('yearly-chart');
+    const legendEl = document.getElementById('yearly-legend');
+    const noteEl = document.getElementById('yearly-note');
+    const W = 320, H = 180, padTop = 10, padBottom = 26, padSide = 8;
+    const plotH = H - padTop - padBottom;
+
+    if(tab === 'fio' || tab === 'moneta' || tab === 'total' || tab === 'xtb'){
+      legendEl.innerHTML = '';
+      const data = tab === 'fio' ? YEARLY_FIO : (tab === 'moneta' ? YEARLY_MONETA : (tab === 'xtb' ? YEARLY_XTB : YEARLY_TOTAL));
+      const maxAbs = Math.max(...data.map(d=>Math.abs(d.value)), 1);
+      const n = data.length;
+      const bw = (W - padSide*2) / n;
+      const zeroY = padTop + plotH * (maxAbs / (maxAbs*2));
+      let bars = '';
+      data.forEach((d,i)=>{
+        const x = padSide + i*bw + bw*0.18;
+        const barW = bw*0.64;
+        const h = Math.abs(d.value)/maxAbs * (plotH/2);
+        const y = d.value >= 0 ? zeroY - h : zeroY;
+        const color = d.value >= 0 ? '#5cb894' : '#cf5b4e';
+        bars += `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h,1.5)}" rx="2" fill="${color}"></rect>`;
+        bars += `<text x="${x+barW/2}" y="${d.value>=0? y-5 : y+h+13}" text-anchor="middle" font-size="9.5" fill="#8b93a5" font-family="SFMono-Regular,Consolas,monospace">${fmtSigned(d.value)}</text>`;
+        bars += `<text x="${x+barW/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="#8b93a5" font-family="-apple-system,sans-serif">${d.label}</text>`;
+      });
+      bars += `<line x1="${padSide}" y1="${zeroY}" x2="${W-padSide}" y2="${zeroY}" stroke="#2a3040" stroke-width="1"></line>`;
+      chartEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">${bars}</svg>`;
+      noteEl.textContent = tab === 'fio'
+        ? 'ČEZ + Komerční banka dohromady, včetně vyplacených dividend. * rok 2026 jen do 27.3.2026 (poslední dostupný záznam).'
+        : (tab === 'moneta'
+          ? 'Všechny 4 fondy dohromady (rozdíl hodnota − investováno mezi konci let, odečteny vklady). Hodnoty ke koncům let z grafu Moneta. * rok 2026 do 5.7.2026.'
+          : (tab === 'xtb'
+            ? 'Přesně z kompletní historie účtu: 2024 = nerealizovaný zisk k 17.1.2025 + dividendy + úroky. 2025–26 = realizované obchody (+26,3 tis.), dividendy, úroky a změna nerealizovaného zisku. * Bez výpisu ke konci 2025 nelze období rozdělit po letech.'
+            : 'Fio + Portu + Moneta + XTB 2024. XTB zisk za 2025–26 (+60 435 Kč) nelze rozdělit po letech, v součtech 2025/2026 chybí. Portu 2024–2025 je odhad. * 2026 je neúplný rok.'));
+    } else {
+      const {labels, series} = YEARLY_PORTU;
+      legendEl.innerHTML = series.map(s=>`<span><span class="legend-dot" style="background:${s.color}"></span>${s.name}</span>`).join('');
+      const allVals = series.flatMap(s=>s.values);
+      const maxAbs = Math.max(...allVals.map(Math.abs), 1);
+      const n = labels.length;
+      const groupW = (W - padSide*2) / n;
+      const barW = groupW*0.32;
+      const zeroY = padTop + plotH/2;
+      let bars = '';
+      labels.forEach((label,i)=>{
+        series.forEach((s,si)=>{
+          const v = s.values[i];
+          const x = padSide + i*groupW + groupW*0.14 + si*(barW+3);
+          const h = Math.abs(v)/maxAbs * (plotH/2);
+          const y = v >= 0 ? zeroY - h : zeroY;
+          bars += `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h,1.5)}" rx="2" fill="${s.color}"></rect>`;
+          bars += `<text x="${x+barW/2}" y="${v>=0? y-4 : y+h+11}" text-anchor="middle" font-size="8" fill="#8b93a5" font-family="SFMono-Regular,Consolas,monospace">${fmtSigned(v)}</text>`;
+        });
+        bars += `<text x="${padSide+i*groupW+groupW/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="#8b93a5" font-family="-apple-system,sans-serif">${label}</text>`;
+      });
+      bars += `<line x1="${padSide}" y1="${zeroY}" x2="${W-padSide}" y2="${zeroY}" stroke="#2a3040" stroke-width="1"></line>`;
+      chartEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">${bars}</svg>`;
+      noteEl.textContent = 'Odhad na základě poslední známé nákupní ceny a přibližného kurzu k danému datu — není přesné tržní ocenění. * roky 2024 a 2025 jsou dopočtené odhady, 2026 je přesná hodnota z výpisu k 30.6.2026.';
+    }
+  }
+
+  // --- Časový test (3 roky od nákupu) ---
+  function addYears(isoDate, years){
+    const d = new Date(isoDate + 'T00:00:00');
+    d.setFullYear(d.getFullYear() + years);
+    return d;
+  }
+  function fmtCzDate(d){
+    return d.toLocaleDateString('cs-CZ', {day:'numeric', month:'numeric', year:'numeric'});
+  }
+
+  function renderTimeTest(){
+    const passedEl = document.getElementById('tt-passed');
+    const pendingEl = document.getElementById('tt-pending');
+    const summaryEl = document.getElementById('tt-summary');
+    if(!passedEl) return;
+    const now = new Date();
+    const passed = [], pending = [], unknown = [];
+
+    holdings.forEach(h=>{
+      if(h.symbol === 'Hotovost') return;
+      const c = computeRow(h);
+      if(!h.firstBuyDate){ unknown.push({h, c}); return; }
+      const testDate = addYears(h.firstBuyDate, 3);
+      if(testDate <= now) passed.push({h, c, testDate});
+      else pending.push({h, c, testDate});
+    });
+
+    pending.sort((a,b)=>a.testDate - b.testDate);
+    passed.sort((a,b)=>b.c.currentValueCZK - a.c.currentValueCZK);
+
+    const passedSum = passed.reduce((s,x)=>s+x.c.currentValueCZK, 0);
+    const passedPl = passed.reduce((s,x)=>s+x.c.plCZK, 0);
+    const pendingSum = pending.reduce((s,x)=>s+x.c.currentValueCZK, 0);
+
+    summaryEl.innerHTML = `Bez daně lze prodat: <span class="pos">${fmtCZK(passedSum)}</span>`;
+
+    function rowHtml(x, showDate){
+      const {h, c, testDate} = x;
+      return `<tr>
+        <td>${escapeHtml(h.symbol)}</td>
+        <td>${escapeHtml(h.platform||'')}</td>
+        <td>${fmtCZK(c.currentValueCZK)}</td>
+        <td class="${c.plCZK>=0?'pos':'neg'}">${c.plCZK>=0?'+':''}${fmtCZK(c.plCZK)}</td>
+        <td>${showDate && testDate ? 'splní '+fmtCzDate(testDate) : (h.firstBuyDate ? 'od '+fmtCzDate(new Date(h.firstBuyDate+'T00:00:00')) : '')}</td>
+      </tr>`;
+    }
+
+    passedEl.innerHTML = `
+      <div class="tt-group-head">
+        <span>✓ Splnily časový test — prodej bez daně</span>
+        <span class="tt-sum">${fmtCZK(passedSum)} <span class="${passedPl>=0?'pos':'neg'}">(${passedPl>=0?'+':''}${fmtCZK(passedPl)})</span></span>
+      </div>
+      ${passed.length ? '<table><tbody>'+passed.map(x=>rowHtml(x,false)).join('')+'</tbody></table>' : '<div class="tt-empty">Zatím žádná pozice nesplnila časový test.</div>'}
+    `;
+
+    pendingEl.innerHTML = `
+      <div class="tt-group-head">
+        <span>⧗ Zatím nesplnily — při prodeji se zisk daní</span>
+        <span class="tt-sum">${fmtCZK(pendingSum)}</span>
+      </div>
+      ${pending.length ? '<table><tbody>'+pending.map(x=>rowHtml(x,true)).join('')+'</tbody></table>' : '<div class="tt-empty">Všechny pozice už test splnily.</div>'}
+      ${unknown.length ? '<div class="tt-empty">Bez data nákupu (nelze posoudit): '+unknown.map(x=>escapeHtml(x.h.symbol)).join(', ')+'</div>' : ''}
+    `;
+  }
+
+  document.getElementById('yearly-tabs').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tab-btn');
+    if(!btn) return;
+    document.querySelectorAll('#yearly-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentYearlyTab = btn.getAttribute('data-tab');
+    renderYearlyChart(currentYearlyTab);
+  });
+
+  const panelAdd = document.getElementById('panel-add');
+  const panelImport = document.getElementById('panel-import');
+  document.getElementById('btn-add').addEventListener('click', ()=>{
+    panelImport.classList.remove('open');
+    panelAdd.classList.toggle('open');
+  });
+  document.getElementById('btn-import').addEventListener('click', ()=>{
+    panelAdd.classList.remove('open');
+    panelImport.classList.toggle('open');
+  });
+
+  document.getElementById('f-submit').addEventListener('click', async ()=>{
+    const platform = document.getElementById('f-platform').value.trim() || 'Ostatní';
+    const symbol = document.getElementById('f-symbol').value.trim();
+    const qty = parseFloat(document.getElementById('f-qty').value);
+    const buy = parseFloat(document.getElementById('f-buy').value);
+    const cur = parseFloat(document.getElementById('f-cur').value);
+    const ccy = document.getElementById('f-ccy').value.trim() || 'CZK';
+    const fx = parseFloat(document.getElementById('f-fx').value);
+    const buyDate = document.getElementById('f-date').value;
+    if(!symbol || isNaN(qty) || isNaN(buy)){
+      toast('Vyplň alespoň symbol, množství a nákupní cenu');
+      return;
+    }
+    holdings.push({
+      id: 'h_'+Math.random().toString(36).slice(2,10),
+      platform, symbol, quantity: qty, avgBuyPrice: buy,
+      currentPrice: isNaN(cur) ? buy : cur,
+      currency: ccy,
+      fxRate: isNaN(fx) ? 1 : fx,
+      firstBuyDate: buyDate || null
+    });
+    await save();
+    ['f-platform','f-symbol','f-qty','f-buy','f-cur','f-ccy','f-fx','f-date'].forEach(id=>document.getElementById(id).value='');
+    panelAdd.classList.remove('open');
+    render();
+    toast('Pozice přidána');
+  });
+
+  document.getElementById('i-submit').addEventListener('click', async ()=>{
+    const format = document.getElementById('i-format').value;
+    const text = document.getElementById('i-text').value;
+
+    if(format === 'csv'){
+      const parsed = parseCsvStatement(text);
+      if(parsed.length === 0){
+        toast('Ve vloženém textu se nepodařilo najít žádné pozice (formát: Platforma;Symbol;Instrument;Měna;Množství;NákupníCena;AktuálníCena;Kurz)');
+        return;
+      }
+      const platformsTouched = [...new Set(parsed.map(p=>p.platform))];
+      holdings = holdings.filter(h=>!platformsTouched.includes(h.platform));
+      parsed.forEach(p=>holdings.push(p));
+      await save();
+      document.getElementById('i-text').value='';
+      panelImport.classList.remove('open');
+      render();
+      toast(`Naimportováno ${parsed.length} pozic (${platformsTouched.join(', ')})`);
+      return;
+    }
+
+    const platform = document.getElementById('i-platform').value.trim() || (format==='fio' ? 'Fio' : 'XTB');
+    const parsed = format === 'fio' ? parseFioStatement(text) : parseStatement(text);
+    if(parsed.length === 0){
+      toast('Ve vloženém textu se nepodařilo najít žádné pozice');
+      return;
+    }
+    holdings = holdings.filter(h=>h.platform !== platform);
+    parsed.forEach(p=>{ p.platform = platform; holdings.push(p); });
+    await save();
+    document.getElementById('i-text').value='';
+    panelImport.classList.remove('open');
+    render();
+    toast(`Naimportováno ${parsed.length} pozic pro ${platform}`);
+  });
+
+  document.getElementById('btn-privacy').addEventListener('click', ()=>{
+    privacyMode = !privacyMode;
+    document.getElementById('btn-privacy').textContent = privacyMode ? '👁 Zobrazit částky' : '🙈 Skrýt částky';
+    render();
+    renderYearlyChart(currentYearlyTab);
+  });
+
+  document.getElementById('btn-fx').addEventListener('click', async ()=>{
+    const btn = document.getElementById('btn-fx');
+    const orig = btn.textContent;
+    btn.textContent = '↻ Načítám…';
+    try{
+      const res = await fetch('https://api.frankfurter.dev/v1/latest?base=CZK&symbols=USD,EUR,GBP');
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      const rates = {
+        USD: 1/data.rates.USD,
+        EUR: 1/data.rates.EUR,
+        GBP: 1/data.rates.GBP,
+        CZK: 1
+      };
+      let n = 0;
+      holdings.forEach(h=>{
+        if(rates[h.currency]){ h.fxRate = rates[h.currency]; n++; }
+      });
+      await save();
+      render();
+      toast(`Kurzy aktualizovány (${n} pozic) — USD ${rates.USD.toFixed(2)}, EUR ${rates.EUR.toFixed(2)}`);
+    }catch(e){
+      toast('Kurzy se nepodařilo načíst (offline nebo blokované připojení)');
+    }
+    btn.textContent = orig;
+  });
+
+  document.getElementById('sort-select').addEventListener('change', (e)=>{
+    sortMode = e.target.value;
+    render();
+  });
+
+  // --- Přesahy a expozice (odhady složení ETF/fondů) ---
+  // mag7 = podíl velké tech sedmičky (AAPL/MSFT/GOOGL/AMZN/META/NVDA/TSLA), us = podíl USA, cz = ČR, bond = dluhopis, cash = hotovost, core = široké akciové jádro
+  const EXPOSURE_MAP = {
+    'AAPL.US':{mag7:1,us:1},'MSFT.US':{mag7:1,us:1},'GOOGL.US':{mag7:1,us:1},'META.US':{mag7:1,us:1},
+    'NVD.DE':{mag7:1,us:1},'TSLA.US':{mag7:1,us:1},
+    'ASO.US':{us:1},'BRYN.DE':{us:1},'GRMN.US':{us:1},'JNJ.US':{us:1},'JPM.US':{us:1},'MMM.US':{us:1},'TTWO.US':{us:1},
+    'TSM.US':{},'SAP.DE':{},'CSG.NL':{cz:1},
+    'VUSA.UK':{us:1,mag7:0.33,core:1},'VWCE.DE':{us:0.62,mag7:0.20,core:1},
+    'ČEZ':{cz:1},'Komerční banka':{cz:1},
+    'CSPX LN':{us:1,mag7:0.33,core:1},'ZPRS GY':{us:0.55,core:1},'SXR7 GY':{},'IS3N GY':{},'XMK9 GY':{},
+    '3SUD GY':{bond:1},'LQDA LN':{bond:1},'DTLA LN':{bond:1},'IGIL LN':{bond:1},
+    'SBIO LN':{us:1},'IUIT LN':{us:1,mag7:0.55},'USPY LN':{us:0.7,mag7:0.05},
+    '2B76 GY':{us:0.55,mag7:0.10},'IEVD GY':{us:0.40,mag7:0.15},'DRUP GY':{us:0.70,mag7:0.25},
+    'Fidelity World':{us:0.70,mag7:0.22,core:1},'UNIQA Global Equity':{us:0.65,mag7:0.20,core:1},
+    'GS Global Equity Income':{us:0.60,mag7:0.10,core:1},'Petrus Active Value':{},
+    'Hotovost':{cash:1}
+  };
+
+  function renderExposure(){
+    const el = document.getElementById('exp-content');
+    const sumEl = document.getElementById('exp-summary');
+    if(!el) return;
+    let total=0, mag7=0, us=0, cz=0, bond=0, cash=0;
+    const corePerPlatform = {};
+    holdings.forEach(h=>{
+      const c = computeRow(h);
+      const v = c.currentValueCZK;
+      total += v;
+      const m = EXPOSURE_MAP[h.symbol] || {};
+      mag7 += v*(m.mag7||0);
+      us += v*(m.us||0);
+      cz += v*(m.cz||0);
+      bond += v*(m.bond||0);
+      cash += v*(m.cash||0);
+      if(m.core){
+        const pf = h.platform||'?';
+        corePerPlatform[pf] = (corePerPlatform[pf]||0) + v;
+      }
+    });
+    const coreTotal = Object.values(corePerPlatform).reduce((a,b)=>a+b,0);
+
+    function bar(label, val, color){
+      const pct = total>0 ? val/total*100 : 0;
+      return `<div class="exp-row">
+        <div class="exp-label">${label}</div>
+        <div class="exp-bar-wrap"><div class="exp-bar" style="width:${Math.min(pct,100).toFixed(1)}%;background:${color}"></div></div>
+        <div class="exp-val">${fmtCZK(val)} · ${pct.toFixed(1)} %</div>
+      </div>`;
+    }
+
+    let html = '<div class="exp-subhead">Skutečná expozice napříč platformami</div>';
+    html += bar('Velká tech 7 (Mag7)', mag7, '#c9a961');
+    html += bar('USA celkem', us, '#5c8ab8');
+    html += bar('Česká republika', cz, '#5cb894');
+    html += bar('Dluhopisy', bond, '#8b93a5');
+    html += bar('Hotovost', cash, '#4a5266');
+
+    html += '<div class="exp-subhead">Globální akciové jádro — stejná expozice na více místech</div>';
+    Object.keys(corePerPlatform).sort().forEach(pf=>{
+      html += bar(pf, corePerPlatform[pf], '#8f7c4d');
+    });
+    html += bar('Jádro celkem', coreTotal, '#c9a961');
+
+    el.innerHTML = html;
+    sumEl.innerHTML = `Mag7: <span style="color:var(--gold)">${(total>0?mag7/total*100:0).toFixed(0)} %</span> · USA: ${(total>0?us/total*100:0).toFixed(0)} %`;
+  }
+
+  // --- Plán výběru (checkboxy s uložením stavu) ---
+  const PLAN_KEY = 'portfolio-plan-v1';
+  const PLAN_STEPS = [
+    {id:'p1', when:'Hned', text:'Zrušit trvalý příkaz do Monety (5 000 Kč/měs.). Portu nechat běžet.'},
+    {id:'p2', when:'Hned', text:'Přesměrovat 5 000 Kč/měs. na spořicí účet „stavba" — návyk zůstává, jen se mění cíl.'},
+    {id:'p3', when:'Podzim 2026', text:'Fio: prodat ČEZ 78 ks (~92 tis. Kč) — vrstvy 2022–2023, bez daně.'},
+    {id:'p4', when:'Podzim 2026', text:'Fio: prodat Komerční banku 106 ks (~113 tis. Kč) — vrstvy 2022–2023, bez daně.'},
+    {id:'p5', when:'Před odkupem', text:'Moneta: písemně si potvrdit, že odkupy párují FIFO (nejstarší kusy první).'},
+    {id:'p6', when:'12/2026–1/2027', text:'Moneta: odkoupit celý GS Global Equity Income (~16 tis. Kč, jednorázovka 4/2022).'},
+    {id:'p7', when:'12/2026–1/2027', text:'Moneta: odkoupit nejstarší vrstvy UNIQA (~141 tis. Kč, vklady do 1/2024 — 3 roky k datu prodeje).'},
+    {id:'p8', when:'12/2026–1/2027', text:'Moneta: odkoupit nejstarší vrstvy Fidelity (~82 tis. Kč, vklady do 1/2024).'},
+    {id:'p9', when:'Rezerva', text:'Pokud chybí: doprodat ČEZ 20 ks z 2024 (~24 tis. Kč, daň jen ~900 Kč).'},
+    {id:'p10', when:'Průběžně', text:'Výtěžek držet na spořicím účtu / krátkém termíňáku — ne zpět do akcií (horizont < 1 rok).'},
+    {id:'p11', when:'Po 3/2027', text:'Obnovit pravidelných 5 000 Kč/měs. — investiční plán na FWRA (Invesco FTSE All-World, TER 0,15 %) na XTB. Stejný index jako dceřino VWCE, ale oddělená pozice.'},
+  ];
+
+  function loadPlanState(){
+    try{ return JSON.parse(localStorage.getItem(PLAN_KEY)) || {}; }catch(e){ return {}; }
+  }
+  function savePlanState(st){
+    try{ localStorage.setItem(PLAN_KEY, JSON.stringify(st)); }catch(e){}
+  }
+
+  function renderPlan(){
+    const el = document.getElementById('plan-items');
+    const prog = document.getElementById('plan-progress');
+    const sum = document.getElementById('plan-summary');
+    if(!el) return;
+    const st = loadPlanState();
+    const done = PLAN_STEPS.filter(s=>st[s.id]).length;
+    prog.textContent = `Splněno ${done} z ${PLAN_STEPS.length} kroků`;
+    sum.innerHTML = done === PLAN_STEPS.length
+      ? '<span class="pos">✓ Hotovo</span>'
+      : `${done}/${PLAN_STEPS.length}`;
+    el.innerHTML = PLAN_STEPS.map(s=>`
+      <label class="plan-item${st[s.id]?' done':''}">
+        <input type="checkbox" data-plan="${s.id}" ${st[s.id]?'checked':''}>
+        <span class="plan-text"><span class="plan-when">${s.when}</span><br>${s.text}</span>
+      </label>
+    `).join('');
+    el.querySelectorAll('[data-plan]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const st2 = loadPlanState();
+        st2[cb.getAttribute('data-plan')] = cb.checked;
+        savePlanState(st2);
+        renderPlan();
+      });
+    });
+  }
+
+  document.getElementById('plan-head').addEventListener('click', (e)=>{
+    if(e.target.closest('input')) return;
+    const sec = document.getElementById('plan-section');
+    const body = document.getElementById('plan-body');
+    sec.classList.toggle('open');
+    body.style.display = sec.classList.contains('open') ? 'block' : 'none';
+  });
+
+  document.getElementById('exp-head').addEventListener('click', ()=>{
+    const sec = document.getElementById('exp-section');
+    const body = document.getElementById('exp-body');
+    sec.classList.toggle('open');
+    body.style.display = sec.classList.contains('open') ? 'block' : 'none';
+  });
+
+  document.getElementById('tt-head').addEventListener('click', ()=>{
+    const sec = document.getElementById('tt-section');
+    const body = document.getElementById('tt-body');
+    sec.classList.toggle('open');
+    body.style.display = sec.classList.contains('open') ? 'block' : 'none';
+  });
+
+  load();
+  renderYearlyChart('total');
+  renderPlan();
+})();
 </script>
 </body>
 </html>
